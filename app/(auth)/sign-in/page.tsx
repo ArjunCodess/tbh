@@ -30,7 +30,6 @@ export default function SignInFormPage() {
      });
 
      const { toast } = useToast();
-
      const onSubmit = async (data: z.infer<typeof signInSchema>) => {
           const result = await signIn('credentials', {
                redirect: false,
@@ -45,9 +44,7 @@ export default function SignInFormPage() {
                          description: 'Incorrect username or password',
                          variant: 'destructive',
                     });
-               }
-
-               else {
+               } else {
                     toast({
                          title: 'Error',
                          description: result.error,
@@ -66,7 +63,7 @@ export default function SignInFormPage() {
                          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">Welcome!</h1>
                          <p className="mb-4 text-sm md:text-base">Please sign in to pick up right where you left off.</p>
                     </div>
-                    
+
                     <Form {...form}>
                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                               <FormField
