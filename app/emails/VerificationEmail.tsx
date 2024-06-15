@@ -1,4 +1,4 @@
-import { Html, Head, Font, Preview, Heading, Row, Section, Text } from '@react-email/components';
+import { Html, Head, Font, Preview, Heading, Row, Section, Text, Link } from '@react-email/components';
 
 interface VerificationEmailProps {
      username: string;
@@ -24,19 +24,28 @@ export default function VerificationEmail({ username, otp }: VerificationEmailPr
                <Preview>Here&apos;s your verification code: {otp}</Preview>
                <Section>
                     <Row>
-                         <Heading as="h2">Hello {username},</Heading>
+                         <Heading as="h2">
+                              Hello, @{username}!
+                         </Heading>
                     </Row>
                     <Row>
                          <Text>
-                              Thank you for registering! Use this code to finish your registration:
+                              Thank you for registering with us! To finish setting up your account, please enter this code:
                          </Text>
                     </Row>
                     <Row>
-                         <Text>{otp}</Text>
+                         <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+                              <strong>{otp}</strong>
+                         </Heading>
                     </Row>
                     <Row>
                          <Text>
                               If you did not request this code, please ignore this email.
+                         </Text>
+                    </Row>
+                    <Row>
+                         <Text>
+                              Or visit this link: <Link href={`/verify/${username}`} className="text-blue-600 no-underline">{"Verify My Account"}</Link>
                          </Text>
                     </Row>
                </Section>

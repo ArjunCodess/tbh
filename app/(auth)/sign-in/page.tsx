@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { signInSchema } from '@/app/lib/schema/signInSchema';
 
-export default function SignInForm() {
+export default function SignInFormPage() {
      const router = useRouter();
 
      const form = useForm<z.infer<typeof signInSchema>>({
@@ -60,14 +60,13 @@ export default function SignInForm() {
      };
 
      return (
-          <div className="flex justify-center items-center min-h-screen bg-neutral-950">
-               <div className="w-full max-w-md p-8 space-y-8 rounded-lg shadow-md bg-white">
+          <div className="flex justify-center items-center min-h-screen sm:bg-neutral-950">
+               <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg sm:shadow-md">
                     <div className="text-center">
-                         <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-6">
-                              Welcome Back!
-                         </h1>
-                         <p className="mb-4">Sign in to pick up where you left off.</p>
+                         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">Welcome!</h1>
+                         <p className="mb-4 text-sm md:text-base">Please sign in to pick up right where you left off.</p>
                     </div>
+                    
                     <Form {...form}>
                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                               <FormField
@@ -100,7 +99,7 @@ export default function SignInForm() {
                     <div className="text-center mt-4">
                          <p>
                               Not a member yet?{' '}
-                              
+
                               <Link href="/sign-up" className="text-blue-600 hover:text-blue-800">
                                    Sign up
                               </Link>
