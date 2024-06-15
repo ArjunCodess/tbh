@@ -44,6 +44,7 @@ export default function VerificationEmail({ username, otp }: VerificationEmailPr
                          </Text>
                     </Row>
                     <Row>
+                         {/* update the link to the deployed version */}
                          <Text>
                               Or visit this link: <Link href={`/verify/${username}`} className="text-blue-600 no-underline">{"Verify My Account"}</Link>
                          </Text>

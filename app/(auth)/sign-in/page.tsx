@@ -38,19 +38,11 @@ export default function SignInFormPage() {
           });
 
           if (result?.error) {
-               if (result.error === 'CredentialsSignin') {
-                    toast({
-                         title: 'Login Failed',
-                         description: 'Incorrect username or password',
-                         variant: 'destructive',
-                    });
-               } else {
-                    toast({
-                         title: 'Error',
-                         description: result.error,
-                         variant: 'destructive',
-                    });
-               }
+               toast({
+                    title: 'Error',
+                    description: result.error,
+                    variant: 'destructive',
+               });
           }
 
           if (result?.url) router.replace('/dashboard');

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
      const session = await getServerSession(authOptions);
 
-     const _user: User = session?.user;
+     const _user: User = session?.user as User;
 
      if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
 
