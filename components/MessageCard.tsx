@@ -51,8 +51,7 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
 
                toast({
                     title: 'Error',
-                    description:
-                         axiosError.response?.data.message ?? 'Failed to delete message',
+                    description: axiosError.response?.data.message ?? 'Failed to delete message',
                     variant: 'destructive',
                });
           }
