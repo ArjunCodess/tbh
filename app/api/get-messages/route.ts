@@ -1,9 +1,9 @@
-import UserModel from '@/app/lib/models/user.schema';
 import mongoose from 'mongoose';
 import { User } from 'next-auth';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/options';
 import connectToDatabase from '@/app/lib/connectToDatabase';
+import UserModel from '@/app/lib/models/user.schema';
 
 export async function GET(request: Request) {
      await connectToDatabase();
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
      const userId = new mongoose.Types.ObjectId(_user._id);
 
      try {
-          const user = await UserModel.aggregate([
+          const messages = await UserModel.aggregate([
                // Stage 1: Match documents where _id is equal to the given userId
                { $match: { _id: userId } },
 
@@ -27,15 +27,14 @@ export async function GET(request: Request) {
                // Stage 3: Sort the resulting documents by 'messages.createdAt' in descending order.
                { $sort: { 'messages.createdAt': -1 } },
 
-               // Stage 4: Group the documents back into a single document per user, with an array 
-               // of all 'messages', now sorted by 'createdAt'.
+               // Stage 4: Group the documents back into a single document per user, with an array of all 'messages', now sorted by 'createdAt'.
                { $group: { _id: '$_id', messages: { $push: '$messages' } } },
           ])
-               .exec(); // Execute the aggregation pipeline and return the result           
+               .exec(); // Execute the aggregation pipeline and return the result
 
-          if (!user || user.length === 0) return Response.json({ message: 'User not found', success: false }, { status: 404 });
+          if (!messages || messages.length === 0) return Response.json({ message: 'No message found', success: false }, { status: 404 });
 
-          return Response.json({ messages: user[0].messages }, { status: 200 });
+          return Response.json({ messages: messages[0].messages }, { status: 200 });
      }
 
      catch (error: any) {
