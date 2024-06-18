@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
      try {
           const questions = [
                "What's a new hobby you recently picked up?||If you could visit any city in the world, where would it be?||What's a movie you can watch over and over again?",

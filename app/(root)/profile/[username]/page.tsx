@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -30,26 +30,17 @@ const parseStringMessages = (messageString: string): string[] => {
      return messageString.split(specialChar);
 };
 
-const initialMessageString =
-     "What's your favorite movie?||Do you have any pets?||What's your dream job?";
+const initialMessageString = "What's your favorite movie?||Do you have any pets?||What's your dream job?";
 
-export default function SendMessage() {
+export default function SendMessagePage() {
+     const [suggestedMessages, setSuggestedMessages] = useState<string[]>(parseStringMessages(initialMessageString));
+
      const params = useParams<{ username: string }>();
      const username = params.username;
 
      const form = useForm<z.infer<typeof messageSchema>>({
           resolver: zodResolver(messageSchema),
      });
-
-     // const {
-     //      complete,
-     //      completion,
-     //      isLoading: isSuggestLoading,
-     //      error,
-     // } = useCompletion({
-     //      api: '/api/suggest-messages',
-     //      initialCompletion: initialMessageString,
-     // });
 
      const messageContent = form.watch('content');
 
@@ -89,15 +80,27 @@ export default function SendMessage() {
           }
      };
 
-     const fetchSuggestedMessages = async () => {
+     const fetchSuggestedMessages = useCallback(async () => {
           try {
-               // complete('');
-               return
-          } catch (error) {
-               console.error('Error fetching messages:', error);
-               // Handle error appropriately
+               const response = await axios.get('/api/suggest-messages');
+               const messagesArray = parseStringMessages(response.data.questions);
+               setSuggestedMessages(messagesArray);
           }
-     };
+          
+          catch (error: any) {
+               const axiosError = error as AxiosError<apiResponse>;
+
+               toast({
+                    title: 'Error',
+                    description: axiosError.response?.data.message ?? 'Failed to fetch message settings',
+                    variant: 'destructive',
+               });
+          }
+     }, []);
+
+     useEffect(() => {
+          fetchSuggestedMessages();
+     }, [fetchSuggestedMessages]);
 
      return (
           <div className="container mx-auto my-8 p-6 bg-white rounded max-w-4xl">
@@ -139,29 +142,24 @@ export default function SendMessage() {
                          <CardHeader>
                               <h3 className="text-xl font-semibold">Messages</h3>
                          </CardHeader>
-                         {/* <CardContent className="flex flex-col space-y-4">
-                              {error ? (
-                                   <p className="text-red-500">{error.message}</p>
-                              ) : (
-                                   parseStringMessages(completion).map((message, index) => (
-                                        <Button
-                                             key={index}
-                                             variant="outline"
-                                             className="mb-2"
-                                             onClick={() => handleMessageClick(message)}
-                                        >
-                                             {message}
-                                        </Button>
-                                   ))
-                              )}
-                         </CardContent> */}
+                         <CardContent className="flex flex-col space-y-4">
+                              {suggestedMessages.map((message, index) => (
+                                   <Button
+                                        key={index}
+                                        variant="outline"
+                                        className="max-w-full overflow-hidden whitespace-normal py-10 md:py-0"
+                                        onClick={() => handleMessageClick(message)}
+                                   >
+                                        {message}
+                                   </Button>
+                              ))}
+                         </CardContent>
                     </Card>
                </div>
                <div className="space-y-2">
                     <Button
                          onClick={fetchSuggestedMessages}
                          className="mb-4 w-full"
-                    // disabled={isSuggestLoading}
                     >
                          Suggest Messages
                     </Button>
