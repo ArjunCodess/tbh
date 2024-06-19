@@ -80,7 +80,7 @@ export default function SendMessagePage() {
           }
      };
 
-     const fetchSuggestedMessages = useCallback(async () => {
+     const fetchSuggestedMessages = async () => {
           try {
                const response = await axios.get('/api/suggest-messages');
                const messagesArray = parseStringMessages(response.data.questions);
@@ -96,7 +96,7 @@ export default function SendMessagePage() {
                     variant: 'destructive',
                });
           }
-     }, []);
+     };
 
      return (
           <div className="container mx-auto my-8 p-6 bg-white rounded max-w-4xl">
