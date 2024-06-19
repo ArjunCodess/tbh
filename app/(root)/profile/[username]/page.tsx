@@ -98,10 +98,6 @@ export default function SendMessagePage() {
           }
      }, []);
 
-     useEffect(() => {
-          fetchSuggestedMessages();
-     }, [fetchSuggestedMessages]);
-
      return (
           <div className="container mx-auto my-8 p-6 bg-white rounded max-w-4xl">
                <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mt-2 mb-8">
@@ -147,7 +143,7 @@ export default function SendMessagePage() {
                                    <Button
                                         key={index}
                                         variant="outline"
-                                        className="max-w-full overflow-hidden whitespace-normal py-10 md:py-0"
+                                        className="max-w-full overflow-hidden whitespace-normal py-8 md:py-0"
                                         onClick={() => handleMessageClick(message)}
                                    >
                                         {message}

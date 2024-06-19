@@ -80,7 +80,7 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
                                         <AlertDialogCancel>
                                              Cancel
                                         </AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteConfirm}>
+                                        <AlertDialogAction className="bg-red-700" onClick={handleDeleteConfirm}>
                                              Continue
                                         </AlertDialogAction>
                                    </AlertDialogFooter>

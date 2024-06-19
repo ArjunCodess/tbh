@@ -161,7 +161,7 @@ export default function DashboardPage() {
                               Accept Messages: {acceptMessages ? 'On' : 'Off'}
                          </span>
                     </div>
-                    <Button className="flex flex-row gap-x-4 ml-4 md:w-1/2" variant="outline" onClick={(e) => { e.preventDefault(); fetchMessages(true); }}>
+                    <Button className="flex flex-row gap-x-4 ml-4 md:w-1/2" variant="outline" onClick={(e) => { e.preventDefault(); fetchMessages(true); }} disabled={isLoading}>
                          Reload Message Feed{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
                     </Button>
                </div>
