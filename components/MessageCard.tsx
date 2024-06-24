@@ -24,6 +24,7 @@ import { Button } from './ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Message } from '@/app/lib/models/message.schema';
 import { apiResponse } from '@/types/apiResponse';
+import Link from 'next/link';
 
 type MessageCardProps = {
      message: Message;
@@ -61,7 +62,7 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
           <Card className="card-bordered">
                <CardHeader>
                     <div className="flex justify-between items-center">
-                         <CardTitle>{message.content}</CardTitle>
+                         <CardTitle><Link href={`/dashboard/message/${message._id}`}>{message.content}</Link></CardTitle>
                          <AlertDialog>
                               <AlertDialogTrigger asChild>
                                    <Button variant='destructive'>

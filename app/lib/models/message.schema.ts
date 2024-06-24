@@ -5,6 +5,10 @@ export interface Message extends Document {
      createdAt: Date;
 }
 
+export interface MessageData extends Document {
+     messages: Message;
+}
+
 export const MessageSchema: Schema<Message> = new mongoose.Schema({
      content: { type: String, required: true, },
      createdAt: { type: Date, required: true, default: Date.now, },
