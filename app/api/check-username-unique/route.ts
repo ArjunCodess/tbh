@@ -29,9 +29,9 @@ export async function GET(request: Request) {
 
           const { username } = result.data;
 
-          const existingVerifiedUserByUsername = await UserModel.findOne({ username, isVerified: true });
+          const existingUserByUsername = await UserModel.findOne({ username });
 
-          if (existingVerifiedUserByUsername) return Response.json({ success: false, message: 'Username is already taken' }, { status: 400 });
+          if (existingUserByUsername) return Response.json({ success: false, message: 'Username is already taken' }, { status: 400 });
 
           return Response.json({ success: true, message: 'Username is available' });
      }

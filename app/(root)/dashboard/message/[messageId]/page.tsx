@@ -9,6 +9,7 @@ import axios, { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { MessageData } from '@/app/lib/models/message.schema';
 import { Message } from '@/app/lib/models/message.schema';
+import dayjs from 'dayjs';
 
 export default function MessagePage() {
      const [messages, setMessages] = useState<MessageData[] | Message[] | any>([]);
@@ -50,8 +51,24 @@ export default function MessagePage() {
      const message = messages[0];
 
      return (
-          <div>
-               {message?.messages.content}
+          <div className="flex flex-col min-h-screen">
+               <div className="flex flex-col items-center justify-center flex-1 px-6 py-8 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full animate-blob-1">
+                         <div className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-r from-[#96ffbf] to-[#ff7575] opacity-50 blur-3xl animate-blob-1" />
+                    </div>
+                    <div className="absolute top-0 right-0 w-full h-full animate-blob-2">
+                         <div className="absolute w-[300px] h-[300px] rounded-full bg-gradient-to-r from-[#373aff] to-[#e74c3c] opacity-50 blur-3xl animate-blob-2" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-full h-full animate-blob-3">
+                         <div className="absolute w-[350px] h-[350px] rounded-full bg-gradient-to-r from-[#2980b9] to-[#ff6cbf] opacity-50 blur-3xl animate-blob-3" />
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-bold z-10 text-center">{message?.messages.content}</h1>
+                    <p className="text-muted-foreground mt-2 z-10">Sent at: {dayjs(message?.messages.createdAt).format('MMM D, YYYY h:mm A')}</p>
+                    <div className="mt-6 space-x-4 z-10 grid-cols-2">
+                         <Button>Add To Story</Button>
+                         <Button variant="secondary">Archive</Button>
+                    </div>
+               </div>
           </div>
      )
 }

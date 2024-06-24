@@ -81,7 +81,7 @@ export default function SignUpFormPage() {
                     description: response.data.message,
                });
 
-               router.replace(`/verify/${username}`);
+               router.replace('/dashboard');
 
                setIsSubmitting(false);
           }
@@ -148,7 +148,6 @@ export default function SignUpFormPage() {
                                         <FormItem>
                                              <FormLabel>Email</FormLabel>
                                              <Input {...field} name="email" />
-                                             <p className='text-muted text-neutral-700 text-sm'>We will send you a verification code</p>
                                              <FormMessage />
                                         </FormItem>
                                    )}

@@ -1,7 +1,6 @@
 'use client'
 
 import { Message } from '@/app/lib/models/message.schema';
-import { User } from '@/app/lib/models/user.schema';
 import { acceptMessageSchema } from '@/app/lib/schema/acceptMessageSchema';
 import MessageCard from '@/components/MessageCard';
 import { Button } from '@/components/ui/button';
@@ -75,8 +74,7 @@ export default function DashboardPage() {
           catch (error) {
                const axiosError = error as AxiosError<apiResponse>;
                toast({
-                    title: 'Error',
-                    description: axiosError.response?.data.message ?? 'Failed to fetch messages',
+                    title: axiosError.response?.data.message ?? 'Failed to fetch messages',
                     variant: 'destructive',
                });
           }
