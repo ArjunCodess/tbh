@@ -31,7 +31,7 @@ export default function Hero() {
                             className="my-auto -mt-3 inline w-16 md:-mt-6 md:w-36 sm:w-28"
                             width={100}
                             height={100}
-                            src="/tbh.PNG"
+                            src="/tbh.png"
                             alt="Special Image Capabilities"
                         />{" "}
                         just better!
