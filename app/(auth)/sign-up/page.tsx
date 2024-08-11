@@ -103,7 +103,7 @@ export default function SignUpFormPage() {
      };
 
      return (
-          <div className="flex justify-center items-center min-h-screen sm:bg-neutral-950">
+          <div className="flex justify-center items-center min-h-screen sm:bg-neutral-900">
                <div className="p-8 space-y-8 bg-white rounded-lg sm:shadow-md">
                     <div className="text-center">
                          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">
