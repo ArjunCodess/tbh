@@ -129,7 +129,7 @@ export default function DashboardPage() {
      };
 
      return (
-          <section className="container my-14 md:my-20">
+          <section className="container px-4 my-14 md:my-20">
                <h1 className="text-4xl font-bold mb-4">User Dashboard</h1>
 
                <div className="mb-4">
