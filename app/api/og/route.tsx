@@ -23,7 +23,7 @@ export async function GET(request: Request) {
                     }}
                 >
                     <div tw="flex flex-col w-full h-full pt-60 items-center">
-                        <div tw="rounded-lg bg-white text-black shadow-sm w-full max-w-md overflow-hidden flex flex-col border border-neutral-950" style={{
+                        <div tw="rounded-lg bg-white text-black shadow-sm w-full max-w-md overflow-hidden flex flex-col" style={{
                             border: '1px solid gray',
                         }}>
                             <div tw="flex bg-black text-white justify-center" style={{
@@ -40,10 +40,10 @@ export async function GET(request: Request) {
                             width={250}
                             height={150}
                             src="https://tbh-tobehonest.vercel.app/tbh.png"
-                            tw='absolute bottom-86'
+                            tw='absolute bottom-60'
                         />
-                        <p tw="text-xl absolute bottom-130 text-white">built by @arjuncodess</p>
-                        <p tw="text-xl absolute bottom-120 text-white">https://tbh-link.vercel.app/</p>
+                        <p tw="text-xl absolute bottom-98 text-white">built by @arjuncodess</p>
+                        <p tw="text-xl absolute bottom-90 text-white">https://tbh-link.vercel.app/</p>
                     </div>
                 </div>
             ),
