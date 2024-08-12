@@ -22,7 +22,7 @@ export async function GET(request: Request) {
                         textAlign: 'center',
                     }}
                 >
-                    <div tw="flex flex-col w-full h-full pt-20 items-center">
+                    <div tw="flex flex-col w-full h-full pt-60 items-center">
                         <div tw="rounded-lg bg-white text-black shadow-sm w-full max-w-md overflow-hidden flex flex-col border border-neutral-950" style={{
                             border: '1px solid gray',
                         }}>
