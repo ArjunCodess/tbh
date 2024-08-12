@@ -87,19 +87,19 @@ export default function MessagePage() {
 
     return (
         <div className="flex flex-col min-h-screen w-full">
-            <div className="flex flex-col items-center justify-center flex-1 px-6 py-8 relative overflow-hidden mt-20 mb-10">
+            <div className="flex flex-col items-center justify-center flex-1 px-6 py-20 relative overflow-hidden">
                 <h1 className="text-4xl md:text-6xl font-bold z-10 text-center">{message?.messages.content}</h1>
                 <p className="text-muted-foreground mt-2 z-10">Sent at: {dayjs(message?.messages.createdAt).format('MMM D, YYYY h:mm A')}</p>
                 <div className="mt-6 space-x-4 z-10 grid-cols-2">
                     <Button onClick={addToStory}>Add To Story</Button>
                 </div>
             </div>
-            {imageSourceUrl &&
-                <div ref={printRef} className='flex flex-col items-center justify-center flex-1 px-6 relative overflow-hidden'>
-                    <p>This is the image you are sharing:</p>
-                    <Image className='my-5 rounded-xl' src={imageSourceUrl} width={500} height={500} alt="Question Image" />
-                </div>
-            }
+            <div className='flex flex-col items-center justify-center flex-1 relative overflow-hidden mb-20'>
+                {imageSourceUrl && <p className='mb-4'>This is the image you are sharing:</p>}
+
+                {/* @ts-ignore */}
+                {imageSourceUrl && <Image ref={printRef} src={imageSourceUrl} width={500} height={500} alt="Question Image" />}
+            </div>
         </div>
     )
 }
