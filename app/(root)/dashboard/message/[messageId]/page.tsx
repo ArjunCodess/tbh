@@ -10,9 +10,8 @@ import { Button } from '@/components/ui/button';
 import { MessageData } from '@/app/lib/models/message.schema';
 import { Message } from '@/app/lib/models/message.schema';
 import dayjs from 'dayjs';
-import puppeteer from 'puppeteer'
-import fs from 'fs';
-import { randomInt } from 'crypto';
+import html2canvas from "html2canvas";
+import Image from 'next/image';
 
 export default function MessagePage() {
     const [messages, setMessages] = useState<MessageData[] | Message[] | any>([]);
@@ -59,34 +58,26 @@ export default function MessagePage() {
         return response.blob();
     }
 
-    // const imageSourceUrlNew = "https://res.cloudinary.com/daily-now/image/upload/f_auto,q_auto/v1/posts/e7acd37725c6ccb9f2cd03a4fbacfe15?_a=AQAEuiZ";
+    const printRef = React.useRef<HTMLInputElement>(null);
+    const shareImage = async () => {
+        const element = printRef.current;
+        const canvas = await html2canvas(element!);
 
-    const imageSourceUrl1 = message
-        ? `https://tbh-tobehonest.vercel.app/api/og?question=${encodeURIComponent(message.messages.content)}`
-        : '';
+        const data = canvas.toDataURL();
+
+        const blob = await (await fetch(data)).blob();
+        const file = new File([blob], "question.png", { type: blob.type });
+
+        navigator.share({
+            title: "Share TBH Question",
+            text: "Check out this question sent to me anonymously on TBH.",
+            files: [file],
+        });
+    };
 
     const addToStory = async () => {
         downloadImageAndSetSource();
-
-        console.log(`clicked shareImageAsset: ${imageSourceUrl1}`)
-        const fetchedImage = await fetch(imageSourceUrl1)
-        const blobImage = await fetchedImage.blob()
-        const fileName = imageSourceUrl1.split('/').pop()
-        const filesArray = [
-            new File([blobImage], (fileName as string), {
-                type: 'blob.type',
-                lastModified: Date.now(),
-            }),
-        ]
-        const shareData = {
-            title: fileName,
-            files: filesArray,
-            url: document.location.origin,
-        }
-        console.log(shareData)
-        if (navigator.canShare && navigator.canShare(shareData)) {
-            await navigator.share(shareData)
-        }
+        shareImage();
     }
 
     const downloadImageAndSetSource = async () => {
@@ -96,23 +87,19 @@ export default function MessagePage() {
 
     return (
         <div className="flex flex-col min-h-screen w-full">
-            <div className="flex flex-col items-center justify-center flex-1 px-6 py-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full animate-blob-1">
-                    <div className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-r from-[#96ffbf] to-[#ff7575] opacity-50 blur-3xl animate-blob-1" />
-                </div>
-                <div className="absolute top-0 right-0 w-full h-full animate-blob-2">
-                    <div className="absolute w-[300px] h-[300px] rounded-full bg-gradient-to-r from-[#373aff] to-[#e74c3c] opacity-50 blur-3xl animate-blob-2" />
-                </div>
-                <div className="absolute bottom-0 left-0 w-full h-full animate-blob-3">
-                    <div className="absolute w-[350px] h-[350px] rounded-full bg-gradient-to-r from-[#2980b9] to-[#ff6cbf] opacity-50 blur-3xl animate-blob-3" />
-                </div>
+            <div className="flex flex-col items-center justify-center flex-1 px-6 py-8 relative overflow-hidden mt-20 mb-10">
                 <h1 className="text-4xl md:text-6xl font-bold z-10 text-center">{message?.messages.content}</h1>
                 <p className="text-muted-foreground mt-2 z-10">Sent at: {dayjs(message?.messages.createdAt).format('MMM D, YYYY h:mm A')}</p>
                 <div className="mt-6 space-x-4 z-10 grid-cols-2">
                     <Button onClick={addToStory}>Add To Story</Button>
                 </div>
-                {imageSourceUrl && <img src={imageSourceUrl} width={500} height={500}></img>}
             </div>
+            {imageSourceUrl &&
+                <div ref={printRef} className='flex flex-col items-center justify-center flex-1 px-6 relative overflow-hidden'>
+                    <p>This is the image you are sharing:</p>
+                    <Image className='my-5 rounded-xl' src={imageSourceUrl} width={500} height={500} alt="Question Image" />
+                </div>
+            }
         </div>
     )
 }
