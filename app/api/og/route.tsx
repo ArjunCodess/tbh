@@ -22,7 +22,7 @@ export async function GET(request: Request) {
                         textAlign: 'center',
                     }}
                 >
-                    <div tw="flex flex-col w-full h-full pt-80 items-center">
+                    <div tw="flex flex-col w-full h-full pt-60 items-center">
                         <div tw="rounded-lg bg-white text-black shadow-sm w-full max-w-md overflow-hidden flex flex-col border border-neutral-950" style={{
                             border: '1px solid gray',
                         }}>
@@ -32,9 +32,18 @@ export async function GET(request: Request) {
                                 <h2 tw="text-2xl">q&a</h2>
                             </div>
                             <div tw="flex p-5 justify-center text-2xl">
-                                <p>{question || "Error. Please try again."}</p>
+                                <p>{question ? question : "Error. Please try again."}</p>
                             </div>
                         </div>
+                        <img
+                            alt="Vercel"
+                            width={250}
+                            height={150}
+                            src="https://tbh-tobehonest.vercel.app/tbh.png"
+                            tw='absolute bottom-86'
+                        />
+                        <p tw="text-xl absolute bottom-130 text-white">built by @arjuncodess</p>
+                        <p tw="text-xl absolute bottom-120 text-white">https://tbh-link.vercel.app/</p>
                     </div>
                 </div>
             ),
