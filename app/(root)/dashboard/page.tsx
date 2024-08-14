@@ -10,9 +10,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { apiResponse } from '@/types/apiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { AxiosError } from 'axios';
-import html2canvas from 'html2canvas';
-import { Loader2, RefreshCcw } from 'lucide-react';
+import { Loader2, RefreshCcw, ImagePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -20,7 +20,8 @@ export default function DashboardPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSwitchLoading, setIsSwitchLoading] = useState(false);
-    const [imageSourceUrl, setImageSourceUrl] = useState("");
+
+    const router = useRouter();
 
     const { toast } = useToast();
 
@@ -130,45 +131,6 @@ export default function DashboardPage() {
         });
     };
 
-    const printRef = React.useRef<HTMLInputElement>(null);
-    const shareImage = async () => {
-        const element = printRef.current;
-        const canvas = await html2canvas(element!);
-
-        const data = canvas.toDataURL();
-
-        const blob = await (await fetch(data)).blob();
-        const file = new File([blob], "question.png", { type: blob.type });
-
-        navigator.share({
-            title: "Share TBH Question",
-            text: "Check out this question sent to me anonymously on TBH.",
-            files: [file],
-        });
-    };
-
-    const addToStory = async () => {
-        downloadImageAndSetSource();
-        shareImage();
-    }
-
-    const downloadImageAndSetSource = async () => {
-        const imageUrls = [
-            'https://tbh-tobehonest.vercel.app/qna1.png',
-            'https://tbh-tobehonest.vercel.app/qna2.png',
-            'https://tbh-tobehonest.vercel.app/qna3.png',
-            'https://tbh-tobehonest.vercel.app/qna4.png'
-        ];
-
-        const randomImageUrl = imageUrls[Math.floor(Math.random() * imageUrls.length)];
-
-        const response = await fetch(randomImageUrl);
-        const imageBlob = await response.blob();
-
-        setImageSourceUrl(URL.createObjectURL(imageBlob));
-    };
-
-
     return (
         <section className="container px-4 my-14 md:my-20 min-h-screen">
             <h1 className="text-4xl font-bold mb-4">User Dashboard</h1>
@@ -200,11 +162,11 @@ export default function DashboardPage() {
                         Accept Messages: {acceptMessages ? 'On' : 'Off'}
                     </span>
                 </div>
+                <Button variant="outline" disabled={isLoading} className='flex flex-row gap-x-4 ml-4 md:w-1/3' onClick={() => router.push('/dashboard/share-qna')}>
+                    Share QNA Image Prompt{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                </Button>
                 <Button className="flex flex-row gap-x-4 ml-4 md:w-1/3" variant="outline" onClick={(e) => { e.preventDefault(); fetchMessages(true); }} disabled={isLoading}>
                     Reload Message Feed{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
-                </Button>
-                <Button className="flex flex-row gap-x-4 ml-4 md:w-1/3" variant="outline" onClick={(e) => { e.preventDefault(); addToStory(); }} disabled={isLoading}>
-                    Generate QNA Image Prompt{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
                 </Button>
             </div>
 
