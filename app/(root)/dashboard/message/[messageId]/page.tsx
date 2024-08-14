@@ -81,7 +81,7 @@ export default function MessagePage() {
     }
 
     const downloadImageAndSetSource = async () => {
-        const image = await fetchBlob('/api/og?question=' + message.messages.content);
+        const image = await fetchBlob('/api/question-image-generation?question=' + message.messages.content);
         setImageSourceUrl(URL.createObjectURL(image));
     }
 

@@ -18,7 +18,7 @@ export default function Hero() {
             <div className="py-20 sm:py-30 md:py-40 max-w-5xl mx-auto">
                 <div className="m-auto flex h-full w-full flex-col gap-8 px-4 py-4 md:px-6 md:py-10 text-center">
                     <h1 style={{ lineHeight: 1.5 }} className="text-3xl font-extrabold tracking-tight md:text-6xl text-white">
-                        nvm, not just a{" "}
+                        not just a{" "}
                         <Image
                             className="my-auto -mt-3 inline w-16 md:-mt-6 md:w-32"
                             width={100}

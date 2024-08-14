@@ -2,10 +2,15 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
+const font = fetch(new URL('../../../public/FONT.ttf', import.meta.url)).then(
+    (res) => res.arrayBuffer()
+)
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-
     const question = searchParams.get('question');
+
+    const fontData = await font;
 
     try {
         return new ImageResponse(
@@ -19,6 +24,7 @@ export async function GET(request: Request) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundImage: 'linear-gradient(to bottom, black, #0f172b)',
+                        fontFamily: 'BricolageGrotesque',
                         textAlign: 'center',
                     }}
                 >
@@ -50,6 +56,14 @@ export async function GET(request: Request) {
             {
                 width: 720,
                 height: 1480,
+                emoji: 'noto',
+                fonts: [
+                    {
+                        name: 'Bricolage Grotesque',
+                        data: fontData,
+                        style: 'normal',
+                    },
+                ],
             }
         )
     }
