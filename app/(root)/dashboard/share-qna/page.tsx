@@ -49,10 +49,10 @@ export default function Page() {
     };
 
     return (
-        <section className='min-h-screen w-full flex justify-center items-center flex-col'>
-            <div className='pt-20 flex flex-col justify-center'>
+        <section className='py-72 mx-auto text-center flex justify-center items-center flex-col'>
+            <div className='flex flex-col justify-center'>
                 <h1 className='text-4xl font-bold mb-4'>TBH QNA Prompt Image</h1>
-                <Button className="flex flex-row gap-x-4 ml-4" variant="outline" onClick={(e) => { e.preventDefault(); addToStory(); }}>
+                <Button className="flex flex-row gap-x-4 mx-4" variant="outline" onClick={(e) => { e.preventDefault(); addToStory(); }}>
                     Share QNA Image Prompt<ImagePlus className="h-4 w-4" />
                 </Button>
             </div>
