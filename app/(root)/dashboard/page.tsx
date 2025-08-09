@@ -11,8 +11,8 @@ import { apiResponse } from '@/types/apiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { AxiosError } from 'axios';
 import { Loader2, RefreshCcw, ImagePlus } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -20,9 +20,7 @@ export default function DashboardPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSwitchLoading, setIsSwitchLoading] = useState(false);
-
-    const router = useRouter();
-
+    const [isSharingToStory, setIsSharingToStory] = useState(false);
 
     const handleDeleteMessage = (messageId: string) => setMessages(messages.filter((message) => message._id !== messageId));
 
@@ -110,6 +108,56 @@ export default function DashboardPage() {
         toast('URL Copied!', { description: 'Profile URL has been copied to clipboard.' });
     };
 
+    const shareToStory = async () => {
+        if (isSharingToStory) return;
+        setIsSharingToStory(true);
+        try {
+            const imagePaths = ['/qna1.png', '/qna2.png', '/qna3.png', '/qna4.png'];
+            const selectedPath = imagePaths[Math.floor(Math.random() * imagePaths.length)];
+
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = selectedPath;
+
+            await new Promise<void>((resolve, reject) => {
+                const onLoad = () => { cleanup(); resolve(); };
+                const onError = () => { cleanup(); reject(new Error('failed to load image')); };
+                const cleanup = () => {
+                    img.removeEventListener('load', onLoad);
+                    img.removeEventListener('error', onError);
+                };
+                img.addEventListener('load', onLoad);
+                img.addEventListener('error', onError);
+            });
+
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'fixed';
+            wrapper.style.left = '-10000px';
+            wrapper.style.top = '0';
+            wrapper.appendChild(img);
+            document.body.appendChild(wrapper);
+
+            await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+            const canvas = await html2canvas(img, { useCORS: true, backgroundColor: null, scale: 2 });
+            const dataUrl = canvas.toDataURL('image/png');
+            const blob = await (await fetch(dataUrl)).blob();
+            const file = new File([blob], 'question.png', { type: 'image/png' });
+
+            document.body.removeChild(wrapper);
+
+            await navigator.share({
+                title: 'Share TBH Question',
+                text: 'Check out this question sent to me anonymously on TBH.',
+                files: [file],
+            });
+        } catch (err: any) {
+            toast.error('Unable to share', { description: err?.message ?? 'Something went wrong while preparing the image.' });
+        } finally {
+            setIsSharingToStory(false);
+        }
+    };
+
     return (
         <section className="container px-4 my-14 md:my-20 min-h-screen">
             <h1 className="text-4xl font-bold mb-4">User Dashboard</h1>
@@ -141,8 +189,8 @@ export default function DashboardPage() {
                         Accept Messages: {acceptMessages ? 'On' : 'Off'}
                     </span>
                 </div>
-                <Button variant="outline" disabled={isLoading} className='flex flex-row gap-x-4 ml-4 md:w-1/3' onClick={() => router.push('/dashboard/share-qna')}>
-                    Share QNA Image Prompt{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                <Button variant="outline" disabled={isSharingToStory} className='flex flex-row gap-x-4 ml-4 md:w-1/3' onClick={shareToStory}>
+                    {isSharingToStory ? 'Preparing…' : 'Share to Story'}{isSharingToStory ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
                 </Button>
                 <Button className="flex flex-row gap-x-4 ml-4 md:w-1/3" variant="outline" onClick={(e) => { e.preventDefault(); fetchMessages(true); }} disabled={isLoading}>
                     Reload Message Feed{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
