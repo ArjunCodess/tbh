@@ -1,9 +1,14 @@
-import MessageForm from "@/components/MessageForm"
+import MessageForm from "@/components/MessageForm";
 
-export async function generateMetadata({ params }: { params: { username: string } }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const { username } = await params;
   return {
-    title: `Send an anonymous message to @${params.username}`,
-    description: `Write and send an anonymous message to @${params.username}. Your message will be delivered privately.`,
+    title: `Send an anonymous message to @${username}`,
+    description: `Write and send an anonymous message to @${username}. Your message will be delivered privately.`,
   };
 }
 
