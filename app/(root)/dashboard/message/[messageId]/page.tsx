@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import { apiResponse } from '@/types/apiResponse';
 import axios, { AxiosError } from 'axios';
@@ -20,7 +20,6 @@ export default function MessagePage() {
     const params = useParams<{ messageId: string }>();
     const messageId = params.messageId;
 
-    const { toast } = useToast();
 
     const { data: session } = useSession();
 
@@ -29,27 +28,20 @@ export default function MessagePage() {
             const response = await axios.get<apiResponse>('/api/get-single-message?messageId=' + messageId);
             setMessages(response.data.messages || []);
 
-            if (refresh) toast({
-                title: 'Refreshed Messages',
-                description: 'Showing latest messages',
-            });
+            if (refresh) toast('Refreshed Messages', { description: 'Showing latest messages' });
         }
 
         catch (error) {
             const axiosError = error as AxiosError<apiResponse>;
-            toast({
-                title: 'Error',
-                description: axiosError.response?.data.message ?? 'Failed to fetch messages',
-                variant: 'destructive',
-            });
+            toast.error('Error', { description: axiosError.response?.data.message ?? 'Failed to fetch messages' });
         }
-    }, [setMessages, toast, messageId]);
+    }, [setMessages, messageId]);
 
     useEffect(() => {
         if (!session || !session.user) return;
 
         fetchMessages();
-    }, [session, toast, fetchMessages]);
+    }, [session, fetchMessages]);
 
     const message = messages[0];
 

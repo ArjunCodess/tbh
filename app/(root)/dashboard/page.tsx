@@ -6,7 +6,7 @@ import MessageCard from '@/components/MessageCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { apiResponse } from '@/types/apiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { AxiosError } from 'axios';
@@ -23,7 +23,6 @@ export default function DashboardPage() {
 
     const router = useRouter();
 
-    const { toast } = useToast();
 
     const handleDeleteMessage = (messageId: string) => setMessages(messages.filter((message) => message._id !== messageId));
 
@@ -48,11 +47,7 @@ export default function DashboardPage() {
         catch (error: any) {
             const axiosError = error as AxiosError<apiResponse>;
 
-            toast({
-                title: 'Error',
-                description: axiosError.response?.data.message ?? 'Failed to fetch message settings',
-                variant: 'destructive',
-            });
+            toast.error('Error', { description: axiosError.response?.data.message ?? 'Failed to fetch message settings' });
         }
 
         finally {
@@ -68,52 +63,39 @@ export default function DashboardPage() {
             const response = await axios.get<apiResponse>('/api/get-messages');
             setMessages(response.data.messages || []);
 
-            if (refresh) toast({
-                title: 'Refreshed Messages',
-                description: 'Showing latest messages',
-            });
+            if (refresh) toast('Refreshed Messages', { description: 'Showing latest messages' });
         }
 
         catch (error) {
             const axiosError = error as AxiosError<apiResponse>;
-            toast({
-                title: axiosError.response?.data.message ?? 'Failed to fetch messages',
-                variant: 'destructive',
-            });
+            toast.error(axiosError.response?.data.message ?? 'Failed to fetch messages');
         }
 
         finally {
             setIsLoading(false);
             setIsSwitchLoading(false);
         }
-    }, [setIsLoading, setMessages, toast]);
+    }, [setIsLoading, setMessages]);
 
     useEffect(() => {
         if (!session || !session.user) return;
 
         fetchMessages();
         fetchAcceptMessages();
-    }, [session, setValue, toast, fetchAcceptMessages, fetchMessages]);
+    }, [session, setValue, fetchAcceptMessages, fetchMessages]);
 
     const handleSwitchChange = async () => {
         try {
             const response = await axios.post<apiResponse>('/api/accept-messages', { acceptMessages: !acceptMessages });
             setValue('acceptMessages', !acceptMessages);
 
-            toast({
-                title: response.data.message,
-                variant: 'default',
-            });
+            toast(response.data.message);
         }
 
         catch (error: any) {
             const axiosError = error as AxiosError<apiResponse>;
 
-            toast({
-                title: 'Error',
-                description: axiosError.response?.data.message ?? 'Failed to update message settings',
-                variant: 'destructive',
-            });
+            toast.error('Error', { description: axiosError.response?.data.message ?? 'Failed to update message settings' });
         }
     };
 
@@ -125,10 +107,7 @@ export default function DashboardPage() {
     const copyToClipboard = () => {
         navigator.clipboard.writeText(profileUrl);
 
-        toast({
-            title: 'URL Copied!',
-            description: 'Profile URL has been copied to clipboard.',
-        });
+        toast('URL Copied!', { description: 'Profile URL has been copied to clipboard.' });
     };
 
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -17,7 +17,7 @@ import {
      FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import * as z from 'zod';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -59,10 +59,7 @@ export default function SendMessagePage() {
                     username,
                });
 
-               toast({
-                    title: response.data.message,
-                    variant: 'default',
-               });
+               toast(response.data.message);
                form.reset({ ...form.getValues(), content: '' });
           }
 
@@ -90,11 +87,7 @@ export default function SendMessagePage() {
           catch (error: any) {
                const axiosError = error as AxiosError<apiResponse>;
 
-               toast({
-                    title: 'Error',
-                    description: axiosError.response?.data.message ?? 'Failed to fetch message settings',
-                    variant: 'destructive',
-               });
+               toast.error('Error', { description: axiosError.response?.data.message ?? 'Failed to fetch message settings' });
           }
      };
 

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { signInSchema } from '@/app/lib/schema/signInSchema';
 
 export default function SignInFormPage() {
@@ -29,7 +29,6 @@ export default function SignInFormPage() {
           },
      });
 
-     const { toast } = useToast();
      const onSubmit = async (data: z.infer<typeof signInSchema>) => {
           const result = await signIn('credentials', {
                redirect: false,
@@ -38,11 +37,7 @@ export default function SignInFormPage() {
           });
 
           if (result?.error) {
-               toast({
-                    title: 'Error',
-                    description: result.error,
-                    variant: 'destructive',
-               });
+               toast.error('Error', { description: result.error });
           }
 
           if (result?.url) router.replace('/dashboard');

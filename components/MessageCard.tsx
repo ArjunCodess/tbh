@@ -21,7 +21,7 @@ import {
      AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from './ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Message } from '@/app/lib/models/message.schema';
 import { apiResponse } from '@/types/apiResponse';
 import Link from 'next/link';
@@ -32,7 +32,6 @@ type MessageCardProps = {
 };
 
 export default function MessageCard({ message, onMessageDelete }: MessageCardProps) {
-     const { toast } = useToast();
 
      const handleDeleteConfirm = async () => {
           try {
@@ -40,9 +39,7 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
                     `/api/delete-message/${message._id}`
                );
 
-               toast({
-                    title: response.data.message,
-               });
+               toast(response.data.message);
 
                onMessageDelete(message._id as string);
           }
@@ -50,10 +47,8 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
           catch (error: any) {
                const axiosError = error as AxiosError<apiResponse>;
 
-               toast({
-                    title: 'Error',
+               toast.error('Error', {
                     description: axiosError.response?.data.message ?? 'Failed to delete message',
-                    variant: 'destructive',
                });
           }
      };
