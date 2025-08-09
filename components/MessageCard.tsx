@@ -4,7 +4,8 @@ import React from 'react'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { Eye, Trash2, Loader2 } from 'lucide-react'
+import { Trash2, Loader2, Share2 } from 'lucide-react'
+import html2canvas from 'html2canvas'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   AlertDialog,
@@ -21,7 +22,6 @@ import { Button } from './ui/button'
 import { toast } from 'sonner'
 import type { Message } from '@/lib/models/message.schema'
 import type { apiResponse } from '@/types/apiResponse'
-import Link from 'next/link'
 
 dayjs.extend(relativeTime)
 
@@ -32,6 +32,7 @@ type MessageCardProps = {
 
 export default function MessageCard({ message, onMessageDelete }: MessageCardProps) {
   const [isDeleting, setIsDeleting] = React.useState(false)
+  const [isSharing, setIsSharing] = React.useState(false)
 
   const handleDeleteConfirm = async () => {
     try {
@@ -46,22 +47,79 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
     }
   }
 
+  const handleShareStory = async () => {
+    try {
+      setIsSharing(true)
+      const res = await fetch(`/api/question-image-generation?question=${encodeURIComponent(message.content)}`)
+      if (!res.ok) throw new Error(`failed to generate image (${res.status})`)
+      const blob = await res.blob()
+
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      const objectUrl = URL.createObjectURL(blob)
+      img.src = objectUrl
+
+      await new Promise<void>((resolve, reject) => {
+        const onLoad = () => { cleanup(); resolve() }
+        const onError = () => { cleanup(); reject(new Error('failed to load generated image')) }
+        const cleanup = () => {
+          img.removeEventListener('load', onLoad)
+          img.removeEventListener('error', onError)
+        }
+        img.addEventListener('load', onLoad)
+        img.addEventListener('error', onError)
+      })
+
+      const wrapper = document.createElement('div')
+      wrapper.style.position = 'fixed'
+      wrapper.style.left = '-10000px'
+      wrapper.style.top = '0'
+      wrapper.appendChild(img)
+      document.body.appendChild(wrapper)
+
+      await new Promise((r) => requestAnimationFrame(() => r(null)))
+
+      const canvas = await html2canvas(img, { useCORS: true, backgroundColor: null, scale: 2 })
+      const dataUrl = canvas.toDataURL('image/png')
+      const outBlob = await (await fetch(dataUrl)).blob()
+      const file = new File([outBlob], 'tbh-answer.png', { type: 'image/png' })
+
+      document.body.removeChild(wrapper)
+      URL.revokeObjectURL(objectUrl)
+
+      await navigator.share({
+        title: 'Share TBH Answer',
+        text: message.content,
+        files: [file],
+      })
+    } catch (err) {
+      toast.error('Unable to share', { description: err instanceof Error ? err.message : 'something went wrong' })
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
   return (
     <Card className="hover:shadow-lg transition-all duration-200">
       <CardContent className="p-4">
         <div className="space-y-3">
-          <p className="text-lg leading-relaxed line-clamp-4 break-words whitespace-pre-wrap">
+          <p className="text-balance font-medium text-lg leading-relaxed line-clamp-4 break-words whitespace-pre-wrap">
             {message.content}
           </p>
           <p className="text-sm text-muted-foreground font-medium">
             {dayjs(message.createdAt).fromNow()}
           </p>
           <div className="flex gap-2 pt-1">
-            <Button asChild variant="outline" size="sm" className="flex-1 text-sm bg-transparent">
-              <Link href={`/dashboard/message/${message._id}`}>
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Link>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShareStory}
+              disabled={isSharing}
+              className="flex-1 text-sm"
+            >
+              {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
+              {isSharing ? 'Sharing…' : 'Share to Story'}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>

@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
@@ -42,12 +41,12 @@ export async function GET(request: Request) {
                                 <p>{question ? question : "Error. Please try again."}</p>
                             </div>
                         </div>
-                        <Image
-                            alt="Vercel"
+                        <img
+                            alt="tbh"
                             width={250}
                             height={150}
                             src="https://tbh-tobehonest.vercel.app/tbh.png"
-                            tw='absolute bottom-60'
+                            style={{ position: 'absolute', bottom: '15rem' }}
                         />
                         <p tw="text-xl absolute bottom-98 text-white">built by @arjuncodess</p>
                         <p tw="text-xl absolute bottom-90 text-white">https://tbh-link.vercel.app/</p>
