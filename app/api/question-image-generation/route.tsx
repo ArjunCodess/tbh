@@ -29,13 +29,13 @@ export async function GET(request: Request) {
                     }}
                 >
                     <div tw="flex flex-col w-full h-full pt-60 items-center">
-                        <div tw="rounded-lg bg-white text-black shadow-sm w-full max-w-md overflow-hidden flex flex-col" style={{
+                        <div tw="rounded-2xl bg-white text-black shadow-sm w-full max-w-md overflow-hidden flex flex-col" style={{
                             border: '1px solid gray',
                         }}>
                             <div tw="flex bg-black text-white justify-center" style={{
                                 backgroundImage: 'linear-gradient(90deg, #2563eb, #7c3aed)',
                             }}>
-                                <h2 tw="text-2xl">q&a</h2>
+                                <h2 tw="text-2xl">send me anonymous messages</h2>
                             </div>
                             <div tw="flex p-5 justify-center text-2xl">
                                 <p>{question ? question : "Error. Please try again."}</p>
