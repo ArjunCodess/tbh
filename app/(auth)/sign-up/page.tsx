@@ -77,7 +77,7 @@ export default function SignUpFormPage() {
 
                toast.success('Success', { description: response.data.message });
 
-               router.replace('/dashboard');
+               router.replace('/sign-in');
 
                setIsSubmitting(false);
           }

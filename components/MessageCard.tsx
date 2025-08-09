@@ -118,7 +118,7 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
               disabled={isSharing}
               className="flex-1 text-sm"
             >
-              {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
+              {isSharing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
               {isSharing ? 'Sharing…' : 'Share to Story'}
             </Button>
             <AlertDialog>
