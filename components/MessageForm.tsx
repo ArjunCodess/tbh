@@ -4,7 +4,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, MessageSquare, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 type MessageFormProps = {
@@ -170,12 +170,10 @@ export default function MessageForm({
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => handleUseSuggestion(s)}
                 aria-label={`Use suggestion: ${s}`}
-                className="w-full"
+                className="w-full whitespace-normal break-words text-balance py-8 md:py-4"
               >
-                <MessageSquare className="mr-2 h-4 w-4" aria-hidden="true" />
                 {s}
               </Button>
             </li>
@@ -185,7 +183,7 @@ export default function MessageForm({
         <div className="mt-3">
           <Button
             type="button"
-            className="w-full"
+            className="w-full text-left whitespace-normal break-words"
             onClick={handleSuggest}
             disabled={isSuggesting}
             aria-busy={isSuggesting}
