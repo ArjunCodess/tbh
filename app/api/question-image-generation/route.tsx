@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
                                 <p>{question ? question : "Error. Please try again."}</p>
                             </div>
                         </div>
-                        <img
+                        <Image
                             alt="Vercel"
                             width={250}
                             height={150}

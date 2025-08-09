@@ -5,7 +5,7 @@ import { authOptions } from '../auth/[...nextauth]/options';
 import connectToDatabase from '@/app/lib/connectToDatabase';
 import UserModel from '@/app/lib/models/user.schema';
 
-export async function GET(request: Request) {
+export async function GET() {
      await connectToDatabase();
 
      const session = await getServerSession(authOptions);
