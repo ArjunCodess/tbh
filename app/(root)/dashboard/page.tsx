@@ -1,7 +1,7 @@
 'use client'
 
-import { Message } from '@/app/lib/models/message.schema';
-import { acceptMessageSchema } from '@/app/lib/schema/acceptMessageSchema';
+import { Message } from '@/lib/models/message.schema';
+import { acceptMessageSchema } from '@/lib/schema/acceptMessageSchema';
 import MessageCard from '@/components/MessageCard';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -11,7 +11,7 @@ import { apiResponse } from '@/types/apiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { AxiosError } from 'axios';
 import { Loader2, RefreshCcw, ImagePlus } from 'lucide-react';
-import { useSession } from '@/app/lib/auth-client';
+import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';

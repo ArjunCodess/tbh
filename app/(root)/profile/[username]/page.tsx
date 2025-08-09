@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { messageSchema } from '@/app/lib/schema/messageSchema';
+import { messageSchema } from '@/lib/schema/messageSchema';
 import { apiResponse } from '@/types/apiResponse';
 
 const specialChar = '||';

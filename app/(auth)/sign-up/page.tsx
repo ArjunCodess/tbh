@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import axios, { AxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { signUpSchema } from '@/app/lib/schema/signUpSchema';
+import { signUpSchema } from '@/lib/schema/signUpSchema';
 import { apiResponse } from '@/types/apiResponse';
 import { useDebounce } from "@uidotdev/usehooks";
 

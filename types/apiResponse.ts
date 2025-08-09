@@ -1,4 +1,4 @@
-import { Message } from "@/app/lib/models/message.schema";
+import { Message } from "@/lib/models/message.schema";
 
 export interface apiResponse {
      success: boolean;

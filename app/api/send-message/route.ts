@@ -1,6 +1,6 @@
-import UserModel from '@/app/lib/models/user.schema';
-import connectToDatabase from '@/app/lib/connectToDatabase';
-import { Message } from '@/app/lib/models/message.schema';
+import UserModel from '@/lib/models/user.schema';
+import connectToDatabase from '@/lib/connectToDatabase';
+import { Message } from '@/lib/models/message.schema';
 
 export async function POST(request: Request) {
      await connectToDatabase();

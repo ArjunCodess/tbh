@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { signIn } from '@/app/lib/auth-client';
+import { signIn } from '@/lib/auth-client';
 import {
      Form,
      FormField,
@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { signInSchema } from '@/app/lib/schema/signInSchema';
+import { signInSchema } from '@/lib/schema/signInSchema';
 
 export default function SignInFormPage() {
      const router = useRouter();

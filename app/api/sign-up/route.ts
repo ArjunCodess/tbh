@@ -1,7 +1,7 @@
-import connectToDatabase from "@/app/lib/connectToDatabase";
-import UserModel from "@/app/lib/models/user.schema";
+import connectToDatabase from "@/lib/connectToDatabase";
+import UserModel from "@/lib/models/user.schema";
 import bcrypt from "bcryptjs";
-import { auth } from "@/app/lib/auth";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export async function POST(request: Request) {

@@ -3,12 +3,12 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { useSession } from '@/app/lib/auth-client';
+import { useSession } from '@/lib/auth-client';
 import { apiResponse } from '@/types/apiResponse';
 import axios, { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
-import { MessageData } from '@/app/lib/models/message.schema';
-import { Message } from '@/app/lib/models/message.schema';
+import { MessageData } from '@/lib/models/message.schema';
+import { Message } from '@/lib/models/message.schema';
 import dayjs from 'dayjs';
 import html2canvas from "html2canvas";
 import Image from 'next/image';

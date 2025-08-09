@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import connectToDatabase from '@/app/lib/connectToDatabase';
-import UserModel from '@/app/lib/models/user.schema';
+import connectToDatabase from '@/lib/connectToDatabase';
+import UserModel from '@/lib/models/user.schema';
 import { headers } from 'next/headers';
-import { auth } from '@/app/lib/auth';
+import { auth } from '@/lib/auth';
 
 export async function GET(request: Request) {
      await connectToDatabase();

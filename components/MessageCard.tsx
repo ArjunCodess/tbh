@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
-import { Message } from '@/app/lib/models/message.schema';
+import { Message } from '@/lib/models/message.schema';
 import { apiResponse } from '@/types/apiResponse';
 import Link from 'next/link';
 
