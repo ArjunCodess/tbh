@@ -65,11 +65,7 @@ export default function SendMessagePage() {
 
           catch (error: any) {
                const axiosError = error as AxiosError<apiResponse>;
-               toast({
-                    title: 'Error',
-                    description: axiosError.response?.data.message ?? 'Failed to send message',
-                    variant: 'destructive',
-               });
+               toast.error('Error', { description: axiosError.response?.data.message ?? 'Failed to send message' });
           }
 
           finally {

@@ -6,16 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { User } from 'next-auth';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { ArrowRight } from "lucide-react"
 
 export default function Navbar() {
     const { data: session } = useSession();
     const user: User = session?.user as User;
-
-    const router = useRouter();
-
-    const toDashboard = () => router.replace('/dashboard')
 
     return (
         <header>
@@ -38,22 +33,28 @@ export default function Navbar() {
                                 Logged in as <span className="font-bold">@{user.username}</span>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <Button className="w-full" onClick={() => toDashboard()} variant="ghost">
-                                <UserIcon className="mr-2 h-4 w-4" />
-                                Dashboard
+                            <Button className="w-full" variant="ghost" asChild>
+                                <Link href="/dashboard">
+                                    <UserIcon className="mr-2 h-4 w-4" />
+                                    Dashboard
+                                </Link>
                             </Button>
                             <DropdownMenuSeparator />
-                            <Button className="w-full" onClick={() => signOut()}>
-                                <LogOutIcon className="mr-2 h-4 w-4" />
-                                Logout
+                            <Button className="w-full" variant="ghost" asChild>
+                                <Link href="/sign-in" onClick={() => signOut()}>
+                                    <LogOutIcon className="mr-2 h-4 w-4" />
+                                    Logout
+                                </Link>
                             </Button>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    : <Link href={"/sign-up"} className="text-sm md:text-base bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full">
-                        <button className="h-10 px-4 py-2 text-white">
-                            Create an account <ArrowRight className="w-5 h-5 inline" />
-                        </button>
-                    </Link>
+                    : (
+                        <Button className="text-sm md:text-base bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full h-10 px-4 py-2 text-white">
+                            <Link href={"/sign-up"}>
+                                Create an account <ArrowRight className="w-5 h-5 inline" />
+                            </Link>
+                        </Button>
+                    )
                 }
             </nav>
         </header>
