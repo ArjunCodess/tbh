@@ -18,7 +18,6 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toast": "^1.1.5",
-    "@react-email/components": "0.0.19",
     "@tabler/icons-react": "^3.12.0",
     "@uidotdev/usehooks": "^2.4.1",
     "@vercel/og": "^0.6.2",
