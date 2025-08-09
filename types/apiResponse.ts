@@ -5,4 +5,5 @@ export interface apiResponse {
      message: string;
      isAcceptingMessages?: boolean;
      messages?: Array<Message>;
+     questions?: string;
 }

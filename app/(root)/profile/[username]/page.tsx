@@ -30,10 +30,11 @@ const parseStringMessages = (messageString: string): string[] => {
      return messageString.split(specialChar);
 };
 
-const initialMessageString = "What's your favorite movie?||Do you have any pets?||What's your dream job?";
+const initialMessageString = "What small win made your day this week?||Which city would you love to explore next?||What's a film you never get tired of?";
 
 export default function SendMessagePage() {
      const [suggestedMessages, setSuggestedMessages] = useState<string[]>(parseStringMessages(initialMessageString));
+     const [isSuggesting, setIsSuggesting] = useState(false);
 
      const params = useParams<{ username: string }>();
      const username = params.username;
@@ -74,6 +75,7 @@ export default function SendMessagePage() {
      };
 
      const fetchSuggestedMessages = async () => {
+          setIsSuggesting(true);
           try {
                const response = await axios.get('/api/suggest-messages');
                const messagesArray = parseStringMessages(response.data.questions);
@@ -84,6 +86,9 @@ export default function SendMessagePage() {
                const axiosError = error as AxiosError<apiResponse>;
 
                toast.error('Error', { description: axiosError.response?.data.message ?? 'Failed to fetch message settings' });
+          }
+          finally {
+               setIsSuggesting(false);
           }
      };
 
@@ -142,11 +147,8 @@ export default function SendMessagePage() {
                     </Card>
                </div>
                <div className="space-y-2">
-                    <Button
-                         onClick={fetchSuggestedMessages}
-                         className="mb-4 w-full"
-                    >
-                         Suggest Messages
+                    <Button onClick={fetchSuggestedMessages} className="mb-4 w-full" disabled={isSuggesting}>
+                         {isSuggesting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating…</>) : 'Suggest Messages'}
                     </Button>
                </div>
                <Separator className="my-12" />
