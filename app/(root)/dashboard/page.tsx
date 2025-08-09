@@ -96,16 +96,7 @@ export default function DashboardPage() {
     setMessages((prev) => prev.filter((msg) => msg._id !== messageId))
   }
 
-  if (!session?.user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
-          <p className="text-lg text-muted-foreground">Please sign in to access your dashboard</p>
-        </div>
-      </div>
-    )
-  }
+  if (!session?.user) return <div className="text-center h-screen flex items-center justify-center">Loading...</div>
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-10 min-h-screen max-w-6xl">

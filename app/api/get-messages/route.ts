@@ -30,7 +30,19 @@ export async function GET() {
           ])
                .exec(); // Execute the aggregation pipeline and return the result
 
-          if (!messages || messages.length === 0) return Response.json({ message: 'No message found', success: false }, { status: 404 });
+          if (!messages) {
+            return Response.json(
+              { message: 'No message found', success: false },
+              { status: 404 }
+            );
+          }
+
+          if (messages.length === 0) {
+            return Response.json(
+              { message: 'No messages yet', success: true, data: [] },
+              { status: 200 }
+            );
+          }
 
           return Response.json({ messages: messages[0].messages }, { status: 200 });
      }
