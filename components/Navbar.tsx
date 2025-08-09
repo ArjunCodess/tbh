@@ -4,7 +4,7 @@ import Link from "next/link"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession, signOut } from "next-auth/react";
 import { ArrowRight } from "lucide-react"
 
 export default function Navbar() {

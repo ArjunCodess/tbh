@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { signIn } from '@/lib/auth-client';
+import { signIn } from 'next-auth/react';
 import {
      Form,
      FormField,
@@ -30,15 +30,17 @@ export default function SignInFormPage() {
      });
 
       const onSubmit = async (formData: z.infer<typeof signInSchema>) => {
-           try {
-                await signIn.email({
-                     email: formData.identifier,
-                     password: formData.password,
-                });
-                router.replace('/dashboard');
-           } catch (e: any) {
-                toast.error('Error', { description: e?.message || 'Sign in failed' });
+           const result = await signIn('credentials', {
+                redirect: false,
+                identifier: formData.identifier,
+                password: formData.password,
+           });
+
+           if (result?.error) {
+                toast.error('Error', { description: result.error || 'Sign in failed' });
+                return;
            }
+           router.replace('/dashboard');
       };
 
      return (
