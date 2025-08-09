@@ -1,18 +1,15 @@
 import UserModel from '@/app/lib/models/user.schema';
-// mongoose import not needed here
-import { User } from 'next-auth';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/options';
 import connectToDatabase from '@/app/lib/connectToDatabase';
+import { headers } from 'next/headers';
+import { auth } from '@/app/lib/auth';
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ messageId: string }> }) {
      const { messageId } = await params;
 
      await connectToDatabase();
 
-     const session = await getServerSession(authOptions);
-
-     const _user: User = session?.user as User;
+     const session = await auth.api.getSession({ headers: await headers() });
+     const _user = session?.user as any;
 
      if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
 

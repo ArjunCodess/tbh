@@ -1,14 +1,13 @@
 import UserModel from '@/app/lib/models/user.schema';
-import { User } from 'next-auth';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/options';
 import connectToDatabase from '@/app/lib/connectToDatabase';
+import { headers } from 'next/headers';
+import { auth } from '@/app/lib/auth';
 
 export async function GET() {
      await connectToDatabase();
 
-     const session = await getServerSession(authOptions);
-     const user = session?.user;
+     const session = await auth.api.getSession({ headers: await headers() });
+     const user = session?.user as any;
 
      if (!session || !user) {
           return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
@@ -31,13 +30,12 @@ export async function GET() {
 export async function POST(request: Request) {
      await connectToDatabase();
 
-     const session = await getServerSession(authOptions);
-
-     const user: User = session?.user as User;
+     const session = await auth.api.getSession({ headers: await headers() });
+     const user = session?.user as any;
 
      if (!session || !session.user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
 
-     const userId = user._id;
+      const userId = user._id;
 
      const { acceptMessages } = await request.json();
 

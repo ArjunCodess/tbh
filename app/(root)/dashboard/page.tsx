@@ -11,7 +11,7 @@ import { apiResponse } from '@/types/apiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios, { AxiosError } from 'axios';
 import { Loader2, RefreshCcw, ImagePlus } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/app/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -99,7 +99,7 @@ export default function DashboardPage() {
         }
     };
 
-    const username = session?.user?.username;
+    const username = (session as any)?.user?.username;
 
     const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
     const profileUrl = `${origin}/profile/${username}`;

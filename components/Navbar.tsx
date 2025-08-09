@@ -4,13 +4,12 @@ import Link from "next/link"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User } from 'next-auth';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut } from "@/app/lib/auth-client";
 import { ArrowRight } from "lucide-react"
 
 export default function Navbar() {
     const { data: session } = useSession();
-    const user: User = session?.user as User;
+    const user = session?.user as any;
 
     return (
         <header>
@@ -19,12 +18,12 @@ export default function Navbar() {
                     TBH
                 </Link>
 
-                {(session && user.username && user.email)
+                {(session && user?.username && user?.email)
                     ? <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="rounded-full">
                                 <Avatar className="h-8 w-8 md:h-10 md:w-10">
-                                    <AvatarFallback>{user.username.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}</AvatarFallback>
+                                    <AvatarFallback>{(user?.username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U')}</AvatarFallback>
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>

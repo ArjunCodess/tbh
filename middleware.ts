@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-export { default } from 'next-auth/middleware';
+import { getSessionCookie } from 'better-auth/cookies';
 
 export const config = {
     matcher: ['/dashboard/:path*', '/sign-in', '/sign-up', '/']
 };
 
 export async function middleware(request: NextRequest) {
-    const token = await getToken({ req: request });
     const url = request.nextUrl;
+    const sessionCookie = getSessionCookie(request);
 
     if (
-        token &&
+        sessionCookie &&
         (
             url.pathname.startsWith('/sign-in') ||
             url.pathname.startsWith('/sign-up')
         )
     ) return NextResponse.redirect(new URL('/dashboard', request.url));
 
-    if (!token && url.pathname.startsWith('/dashboard')) {
+    if (!sessionCookie && url.pathname.startsWith('/dashboard')) {
         return NextResponse.redirect(new URL('/sign-in', request.url));
     }
 

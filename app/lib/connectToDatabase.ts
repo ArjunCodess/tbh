@@ -19,7 +19,7 @@ export default async function connectToDatabase(): Promise<void> {
           console.log("Database connection established.")
      }
      
-     catch (error: any) {
+     catch {
           console.log("Failed to connect.");
           process.exit(1);
      };

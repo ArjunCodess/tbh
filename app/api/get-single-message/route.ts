@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
-import { User } from 'next-auth';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/options';
 import connectToDatabase from '@/app/lib/connectToDatabase';
 import UserModel from '@/app/lib/models/user.schema';
+import { headers } from 'next/headers';
+import { auth } from '@/app/lib/auth';
 
 export async function GET(request: Request) {
      await connectToDatabase();
@@ -11,9 +10,8 @@ export async function GET(request: Request) {
      const { searchParams } = new URL(request.url);
      const messageId = searchParams.get("messageId");
 
-     const session = await getServerSession(authOptions);
-
-     const _user: User = session?.user as User;
+     const session = await auth.api.getSession({ headers: await headers() });
+     const _user = session?.user as any;
 
      if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
 

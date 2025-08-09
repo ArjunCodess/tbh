@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/app/lib/auth-client';
 import { apiResponse } from '@/types/apiResponse';
 import axios, { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
