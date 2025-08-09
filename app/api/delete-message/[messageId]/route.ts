@@ -1,12 +1,12 @@
 import UserModel from '@/app/lib/models/user.schema';
-import mongoose from 'mongoose';
+// mongoose import not needed here
 import { User } from 'next-auth';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/options';
 import connectToDatabase from '@/app/lib/connectToDatabase';
 
-export async function DELETE(request: Request, { params }: { params: { messageId: string } }) {
-     const messageId = params.messageId;
+export async function DELETE(request: Request, { params }: { params: Promise<{ messageId: string }> }) {
+     const { messageId } = await params;
 
      await connectToDatabase();
 
@@ -16,7 +16,7 @@ export async function DELETE(request: Request, { params }: { params: { messageId
 
      if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
 
-     const userId = new mongoose.Types.ObjectId(_user._id);
+     // NOTE: userId not needed directly here; using _user._id in the query below
 
      try {
           // Update the user document by removing a message with the specified messageId

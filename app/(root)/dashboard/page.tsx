@@ -53,7 +53,7 @@ export default function DashboardPage() {
         finally {
             setIsSwitchLoading(false);
         }
-    }, [setValue, toast]);
+    }, [setValue]);
 
     const fetchMessages = useCallback(async (refresh: boolean = false) => {
         setIsLoading(true);
