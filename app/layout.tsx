@@ -4,7 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AuthProvider from "@/app/context/AuthProvider";
+import AuthProvider from "@/providers/AuthProvider";
 
 const BricolageGrotesque = Bricolage_Grotesque({ subsets: ["latin"] });
 
