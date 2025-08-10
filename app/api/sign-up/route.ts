@@ -2,6 +2,8 @@ import connectToDatabase from "@/lib/connectToDatabase";
 import UserModel from "@/lib/models/user.schema";
 import { isUsernameTakenCI, findUserByEmailCI } from "@/lib/userIdentity";
 import bcrypt from "bcryptjs";
+import ThreadModel from "@/lib/models/thread.schema";
+import mongoose from "mongoose";
 
 export async function POST(request: Request) {
      await connectToDatabase();
@@ -17,7 +19,7 @@ export async function POST(request: Request) {
 
           const existingUserByEmail = await findUserByEmailCI(email);
 
-          if (existingUserByEmail) {
+           if (existingUserByEmail) {
                const hashedPassword = await bcrypt.hash(password, 10).toString();
                existingUserByEmail.password = hashedPassword;
 
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
                const expiryDate = new Date();
                expiryDate.setHours(expiryDate.getHours() + 1);
 
-               const newUser = new UserModel({
+                const newUser = new UserModel({
                     username,
                     email,
                     password: hashedPassword,
@@ -36,7 +38,17 @@ export async function POST(request: Request) {
                     messages: [],
                });
 
-                await newUser.save();
+                 await newUser.save();
+
+                 try {
+                   await ThreadModel.create({
+                     userId: new mongoose.Types.ObjectId(newUser._id as string),
+                     title: "ask me anything",
+                     slug: "ama",
+                   });
+                 } catch {
+                   // ignore duplicate creation errors
+                 }
           }
 
           return Response.json({ success: true, message: "User registered successfully." }, { status: 200 });

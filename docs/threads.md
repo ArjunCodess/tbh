@@ -7,13 +7,13 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 - **default**: "ask me anything" remains the default everywhere
 - **profile selector**: add a dropdown ("dropper") bound to `?q` to select thread
 - **db**: introduce `Thread` and link `Message` to a thread; write a backfill migration
-- **image api**: support custom titles via `?question=...` (use provided question in place of the static title)
+- **image api**: support custom titles via `?reply=...` (use provided question in place of the static title)
 
 ### conventions
 - **canonical default thread**
   - name: "ask me anything"
   - slug: `ama`
-- **profile url parameter**: `?q=<thread-slug>` with fallback to `ama`
+- **profile url parameter**: `?thread=<thread-slug>` with fallback to `ama`
 - **display order**: default thread first, then most recently created
 
 ### phase 1 — database changes
@@ -53,23 +53,12 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 
 ### phase 5 — question image api
 - `app/api/reply-image-generation/route.tsx`
-  - already supports `?question=...`
+  - already supports `?reply=...`
   - usage: supply the current thread’s title as `q` to replace the prior static label
-  - example: `/api/reply-image-generation?q=${encodeURIComponent(currentThreadTitle)}`
+  - example: `/api/reply-image-generation?thread=${encodeURIComponent(currentThreadTitle)}`
 
 ### phase 6 — sign-up defaulting
 - when a new user signs up, automatically create the default `ama` thread
-
-### non-goals (for now)
-- folders ui/ux — can be layered later to group threads. keep db ready for future `Folder` if needed, but do not build ui now.
-
-### data contracts
-- thread (db)
-  - `{ _id, userId, title, slug, createdAt }`
-- message (db)
-  - `{ _id, content, createdAt, threadId }`
-- send message (api request)
-  - `{ content, threadSlug? }` or query `?thread=<slug>`
 
 ### rollout plan
 1) ship db schemas + migration (backfill)
@@ -78,21 +67,15 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 4) wire profile dropdown and send-message plumbing
 5) hook thread title to image api param
 
-### testing
-- unit: slug generation, per-user uniqueness, api validation
-- integration: send-message assigns correct thread, dashboard sections render by thread
-- migration dry-run: verify counts before/after; confirm idempotency
-
 ### todo list
-- [ ] add `Thread` schema, indexes, and model
-- [ ] add `threadId` to `Message` schema with index
-- [ ] write migration to create default `ama` thread per user and backfill messages
-- [ ] add `/api/threads` (get, post) for authenticated users
-- [ ] update `/api/get-messages` to accept `threadId`/`threadSlug` filter with default fallback
-- [ ] update `/api/send-message` to accept and apply `threadSlug` (default `ama`)
-- [ ] add profile dropdown bound to `?q=<slug>`; default to `ama`
-- [ ] pass selected thread to `MessageForm` and send-message request
-- [ ] update dashboard to render separated sections per thread
-- [ ] integrate thread title with `/api/reply-image-generation?question=...&`
-- [ ] create default thread at sign-up time
-- [ ] add minimal e2e tests for selection/submit and dashboard grouping
+- [x] add `Thread` schema, indexes, and model
+- [x] add `threadId` to `Message` schema with index
+- [x] write migration to create default `ama` thread per user and backfill messages
+- [x] add `/api/threads` (get, post) for authenticated users
+- [x] update `/api/get-messages` to accept `threadId`/`threadSlug` filter with default fallback
+- [x] update `/api/send-message` to accept and apply `threadSlug` (default `ama`)
+- [x] add profile dropdown bound to `?thread=<slug>`; default to `ama`
+- [x] pass selected thread to `MessageForm` and send-message request
+- [x] update dashboard to render separated sections per thread
+- [x] integrate thread title with `/api/reply-image-generation?reply=...&`
+- [x] create default thread at sign-up time

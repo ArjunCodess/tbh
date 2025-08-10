@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Check, RefreshCw, Loader2, ImagePlus } from "lucide-react";
+import { Copy, Check, RefreshCw, Loader2, ImagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import type { Message } from "@/lib/models/message.schema";
@@ -62,6 +62,7 @@ export default function DashboardClient({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSharingToStory, setIsSharingToStory] = useState(false);
   const [isCreatingThread, setIsCreatingThread] = useState(false);
+  const [isDeletingSlug, setIsDeletingSlug] = useState<string | null>(null);
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const initialSelected =
     initialThreads.find((t) => t.slug === "ama")?.slug ||
@@ -441,6 +442,30 @@ export default function DashboardClient({
                 <h2 className="text-2xl font-bold">
                   {t.title} — {!isLoading && `${list.length}`}
                 </h2>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={t.slug === 'ama' || isDeletingSlug === t.slug}
+                  onClick={async () => {
+                    try {
+                      setIsDeletingSlug(t.slug);
+                      await axios.delete("/api/threads", { data: { slug: t.slug } });
+                      setThreads((prev) => prev.filter((x) => x.slug !== t.slug));
+                      setMessagesByThread((prev) => {
+                        const copy = { ...prev } as any;
+                        delete copy[t.slug];
+                        return copy;
+                      });
+                      toast.success("Thread deleted");
+                    } catch (e: any) {
+                      toast.error("Failed to delete thread", { description: e?.response?.data?.message || e?.message });
+                    } finally {
+                      setIsDeletingSlug(null);
+                    }
+                  }}
+                >
+                  {isDeletingSlug === t.slug ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                </Button>
               </div>
               {isLoading ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

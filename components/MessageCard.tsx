@@ -151,7 +151,7 @@ export default function MessageCard({
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={handleShareStory}
               disabled={isSharing}
               className="flex-1 text-sm"
@@ -168,7 +168,7 @@ export default function MessageCard({
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   disabled={isDeleting}
                 >
