@@ -11,7 +11,7 @@ export interface User extends Document {
 
 const UserSchema: Schema<User> = new mongoose.Schema({
      username: { type: String, required: [true, 'Username is required'], trim: true, unique: true, },
-     email: { type: String, required: [true, 'Email is required'], unique: true, match: [/.+\@.+\..+/, 'Please use a valid email address'], },
+     email: { type: String, required: [true, 'Email is required'], unique: true, match: [/.+@.+\..+/, 'Please use a valid email address'], },
      password: { type: String, required: [true, 'Password is required'], },
      isAcceptingMessages: { type: Boolean, default: true, },
      messages: [ MessageSchema ],
