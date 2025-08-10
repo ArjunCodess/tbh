@@ -13,6 +13,7 @@ import {
   Loader2,
   ImagePlus,
   Trash2,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -370,6 +371,7 @@ export default function DashboardClient({
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="lg" className="text-base h-12">
+                    <Plus className="h-5 w-5 mr-2" />
                     Add Thread
                   </Button>
                 </AlertDialogTrigger>
