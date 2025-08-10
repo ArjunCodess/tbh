@@ -5,16 +5,16 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 ### goals
 - **threads on dashboard**: show separated sections for each thread
 - **default**: "ask me anything" remains the default everywhere
-- **profile selector**: add a dropdown ("dropper") using `nuqs` bound to `?type=qna` to select thread
+- **profile selector**: add a dropdown ("dropper") bound to `?type` to select thread
 - **db**: introduce `Thread` and link `Message` to a thread; write a backfill migration
 - **image api**: support custom titles via `?question=...` (use provided question in place of the static title)
 
-### phase 0 — naming & defaults
-- canonical default thread
+### conventions
+- **canonical default thread**
   - name: "ask me anything"
   - slug: `ama`
-- url parameter on profile: `?type=qna=<thread-slug>` with fallback to `ama`
-- display order: default thread first, then most recently created
+- **profile url parameter**: `?type=<thread-slug>` with fallback to `ama`
+- **display order**: default thread first, then most recently created
 
 ### phase 1 — database changes
 - add `Thread` schema
@@ -48,7 +48,6 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 ### phase 4 — profile ui
 - `app/(root)/profile/[username]/page.tsx`
   - add a dropdown to pick the thread; default selection = "ask me anything"
-  - use `nuqs` to sync selection to the query param `?type=qna=<thread-slug>`
   - pass the selected thread along to `MessageForm` (and ultimately to `POST /api/send-message`)
   - server-render threads list for the profile user; the dropdown itself can be a tiny client component wrapped in `Suspense`
 
@@ -76,7 +75,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 1) ship db schemas + migration (backfill)
 2) ship apis (threads list/create, message filtering)
 3) wire dashboard sections per thread
-4) wire profile dropdown using `nuqs` and send-message plumbing
+4) wire profile dropdown and send-message plumbing
 5) hook thread title to image api param
 
 ### testing
@@ -91,7 +90,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 - [ ] add `/api/threads` (get, post) for authenticated users
 - [ ] update `/api/get-messages` to accept `threadId`/`threadSlug` filter with default fallback
 - [ ] update `/api/send-message` to accept and apply `threadSlug` (default `ama`)
-- [ ] add profile dropdown using `nuqs` bound to `?type=qna=<slug>`; default to `ama`
+- [ ] add profile dropdown bound to `?type=<slug>`; default to `ama`
 - [ ] pass selected thread to `MessageForm` and send-message request
 - [ ] update dashboard to render separated sections per thread
 - [ ] integrate thread title with `/api/question-image-generation?question=...&`

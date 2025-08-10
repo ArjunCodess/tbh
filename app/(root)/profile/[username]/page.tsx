@@ -1,5 +1,7 @@
 import MessageForm from "@/components/MessageForm";
+import ThreadDropdown from "@/components/ThreadDropdown";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 export async function generateMetadata({
   params,
@@ -19,6 +21,9 @@ export default async function Page({
   params: Promise<{ username: string }>
 }) {
   const { username } = await params;
+  const threads: { title: string; slug: string }[] = [
+    { title: "ask me anything", slug: "ama" },
+  ];
 
   return (
     <main className="min-h-[calc(100dvh-0px)] w-full px-4 py-6 md:py-10">
@@ -28,7 +33,10 @@ export default async function Page({
             <h1 className="text-xl font-semibold tracking-tight md:text-2xl">Send an anonymous message</h1>
             <p className="mt-1 text-sm text-muted-foreground">to @{username}</p>
 
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col gap-4">
+              <Suspense fallback={<div className="mb-4 h-9 w-full rounded-md bg-muted animate-pulse" aria-hidden="true" />}> 
+                <ThreadDropdown threads={threads} />
+              </Suspense>
               <MessageForm username={username} />
             </div>
           </div>
