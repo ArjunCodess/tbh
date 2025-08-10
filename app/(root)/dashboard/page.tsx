@@ -20,8 +20,11 @@ export default function DashboardPage() {
   const [acceptMessages, setAcceptMessages] = useState(false);
   const [isSwitchLoading, setIsSwitchLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isMessagesLoading, setIsMessagesLoading] = useState(true);
+  type ThreadLite = { _id?: string; title: string; slug: string };
+  const [threads, setThreads] = useState<ThreadLite[]>([]);
+  const [messagesByThread, setMessagesByThread] = useState<Record<string, Message[]>>({});
+  const [isThreadsLoading, setIsThreadsLoading] = useState(true);
+  const [loadingThreads, setLoadingThreads] = useState<Record<string, boolean>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSharingToStory, setIsSharingToStory] = useState(false);
 
@@ -43,29 +46,48 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchMessages = async (showRefreshToast = false) => {
-    if (showRefreshToast) {
-      setIsRefreshing(true);
-    } else {
-      setIsMessagesLoading(true);
-    }
-
+  const fetchThreadsAndMessages = async (showRefreshToast = false) => {
+    if (showRefreshToast) setIsRefreshing(true);
+    setIsThreadsLoading(true);
     try {
-      const response = await axios.get<apiResponse>("/api/get-messages");
-      const fetchedMessages: Message[] = response.data.messages || [];
-      const sortedMessages = [...fetchedMessages].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      const tRes = await axios.get<{ success: boolean; threads: ThreadLite[] }>("/api/threads");
+      const fetchedThreads = tRes.data?.threads || [];
+      const ordered = [
+        ...fetchedThreads.filter((t) => t.slug === "ama"),
+        ...fetchedThreads.filter((t) => t.slug !== "ama"),
+      ];
+      setThreads(ordered);
+
+      const loaders: Record<string, boolean> = {};
+      for (const t of ordered) loaders[t.slug] = true;
+      setLoadingThreads(loaders);
+
+      const results = await Promise.all(
+        ordered.map((t) =>
+          axios
+            .get<apiResponse>(`/api/get-messages`, {
+              params: { threadSlug: t.slug },
+            })
+            .then((r) => ({ slug: t.slug, messages: (r.data.messages || []) as Message[] }))
+            .catch(() => ({ slug: t.slug, messages: [] as Message[] }))
+        )
       );
-      setMessages(sortedMessages);
-      if (showRefreshToast) {
-        toast.success("Messages refreshed");
-      }
+
+      const map: Record<string, Message[]> = {};
+      results.forEach(({ slug, messages }) => {
+        const sorted = [...messages].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        map[slug] = sorted;
+      });
+      setMessagesByThread(map);
+      if (showRefreshToast) toast.success("Messages refreshed");
     } catch {
-      toast.error("Failed to fetch messages");
+      toast.error("Failed to fetch threads or messages");
     } finally {
-      setIsMessagesLoading(false);
+      setIsThreadsLoading(false);
       setIsRefreshing(false);
+      setLoadingThreads({});
     }
   };
 
@@ -136,8 +158,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     fetchAcceptMessages();
-    fetchMessages();
-  }, [status]);
+    fetchThreadsAndMessages();
+  }, [status, fetchThreadsAndMessages]);
 
   const copyToClipboard = async () => {
     try {
@@ -165,8 +187,11 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteMessage = (messageId: string) => {
-    setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+  const handleDeleteMessageFactory = (threadSlug: string) => (messageId: string) => {
+    setMessagesByThread((prev) => ({
+      ...prev,
+      [threadSlug]: (prev[threadSlug] || []).filter((m) => (m._id as any) !== messageId),
+    }));
   };
 
   if (status === "loading") {
@@ -217,8 +242,8 @@ export default function DashboardPage() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => fetchMessages(true)}
-              disabled={isRefreshing || isMessagesLoading}
+              onClick={() => fetchThreadsAndMessages(true)}
+              disabled={isRefreshing || isThreadsLoading}
               size="default"
               className="px-4"
             >
@@ -267,16 +292,9 @@ export default function DashboardPage() {
 
       <Separator className="mb-6" />
 
-      {/* Messages Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">
-            Messages {!isMessagesLoading && `(${messages.length})`}
-          </h2>
-        </div>
-
-        {/* Loading State */}
-        {isMessagesLoading ? (
+      {/* Messages grouped by thread */}
+      <div className="space-y-8">
+        {isThreadsLoading && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i}>
@@ -294,28 +312,68 @@ export default function DashboardPage() {
               </Card>
             ))}
           </div>
-        ) : messages.length === 0 ? (
-          /* Empty State */
+        )}
+
+        {!isThreadsLoading && threads.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center">
-              <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
+              <h3 className="text-xl font-semibold mb-2">No threads yet</h3>
               <p className="text-base text-muted-foreground">
-                Share your link to start receiving messages
+                Create a thread to start organizing your messages
               </p>
             </CardContent>
           </Card>
-        ) : (
-          /* Messages Grid */
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {messages.map((message) => (
-              <MessageCard
-                key={message._id as string}
-                message={message as any}
-                onMessageDelete={handleDeleteMessage}
-              />
-            ))}
-          </div>
         )}
+
+        {threads.map((t) => {
+          const list = messagesByThread[t.slug] || [];
+          const isLoading = !!loadingThreads[t.slug];
+          return (
+            <div key={t.slug} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">{t.title} — {(!isLoading) && `${list.length}`}</h2>
+              </div>
+              {isLoading ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Card key={i}>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="h-5 bg-muted rounded animate-pulse" />
+                          <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
+                          <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+                          <div className="flex gap-2 pt-2">
+                            <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
+                            <div className="h-9 w-12 bg-muted rounded animate-pulse" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : list.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
+                    <p className="text-base text-muted-foreground">
+                      Share your link to start receiving messages
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {list.map((message) => (
+                    <MessageCard
+                      key={message._id as string}
+                      message={message as any}
+                      onMessageDelete={handleDeleteMessageFactory(t.slug)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
