@@ -1,102 +1,181 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import MessageCard from "@/components/MessageCard"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { Copy, Check, RefreshCw, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import axios from "axios"
-import type { Message } from "@/lib/models/message.schema"
-import type { apiResponse } from "@/types/apiResponse"
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import MessageCard from "@/components/MessageCard";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import {
+  Copy,
+  Check,
+  RefreshCw,
+  Loader2,
+  ImagePlus,
+} from "lucide-react";
+import { toast } from "sonner";
+import axios from "axios";
+import type { Message } from "@/lib/models/message.schema";
+import type { apiResponse } from "@/types/apiResponse";
+import html2canvas from "html2canvas";
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
-  const [copied, setCopied] = useState(false)
-  const [acceptMessages, setAcceptMessages] = useState(false)
-  const [isSwitchLoading, setIsSwitchLoading] = useState(true)
-  const [isToggling, setIsToggling] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isMessagesLoading, setIsMessagesLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { data: session } = useSession();
+  const [copied, setCopied] = useState(false);
+  const [acceptMessages, setAcceptMessages] = useState(false);
+  const [isSwitchLoading, setIsSwitchLoading] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSharingToStory, setIsSharingToStory] = useState(false);
 
-  const username = (session as any)?.user?.username
-  const profileUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/profile/${username}`
+  const username = (session as any)?.user?.username;
+  const profileUrl = `${
+    typeof window !== "undefined" ? window.location.origin : ""
+  }/profile/${username}`;
 
   const fetchAcceptMessages = async () => {
     try {
-      const response = await axios.get<apiResponse>("/api/accept-messages")
-      setAcceptMessages(!!response.data.isAcceptingMessages)
+      const response = await axios.get<apiResponse>("/api/accept-messages");
+      setAcceptMessages(!!response.data.isAcceptingMessages);
     } catch {
       toast.error("Failed to load settings", {
         description: "Could not fetch message acceptance status",
-      })
+      });
     } finally {
-      setIsSwitchLoading(false)
+      setIsSwitchLoading(false);
     }
-  }
+  };
 
   const fetchMessages = async (showRefreshToast = false) => {
     if (showRefreshToast) {
-      setIsRefreshing(true)
+      setIsRefreshing(true);
     } else {
-      setIsMessagesLoading(true)
+      setIsMessagesLoading(true);
     }
 
     try {
-      const response = await axios.get<apiResponse>("/api/get-messages")
-      setMessages(response.data.messages || [])
+      const response = await axios.get<apiResponse>("/api/get-messages");
+      setMessages(response.data.messages || []);
       if (showRefreshToast) {
-        toast.success("Messages refreshed")
+        toast.success("Messages refreshed");
       }
     } catch {
-      toast.error("Failed to fetch messages")
+      toast.error("Failed to fetch messages");
     } finally {
-      setIsMessagesLoading(false)
-      setIsRefreshing(false)
+      setIsMessagesLoading(false);
+      setIsRefreshing(false);
     }
-  }
+  };
+
+  const shareToStory = async () => {
+    if (isSharingToStory) return;
+    setIsSharingToStory(true);
+    try {
+      const imagePaths = ["/qna1.png", "/qna2.png", "/qna3.png", "/qna4.png"];
+      const selectedPath =
+        imagePaths[Math.floor(Math.random() * imagePaths.length)];
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = selectedPath;
+
+      await new Promise<void>((resolve, reject) => {
+        const onLoad = () => {
+          cleanup();
+          resolve();
+        };
+        const onError = () => {
+          cleanup();
+          reject(new Error("failed to load image"));
+        };
+        const cleanup = () => {
+          img.removeEventListener("load", onLoad);
+          img.removeEventListener("error", onError);
+        };
+        img.addEventListener("load", onLoad);
+        img.addEventListener("error", onError);
+      });
+
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "fixed";
+      wrapper.style.left = "-10000px";
+      wrapper.style.top = "0";
+      wrapper.appendChild(img);
+      document.body.appendChild(wrapper);
+
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      const canvas = await html2canvas(img, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 2,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], "question.png", { type: "image/png" });
+
+      document.body.removeChild(wrapper);
+
+      await navigator.share({
+        title: "Share TBH Question",
+        text: "Check out this question sent to me anonymously on TBH.",
+        files: [file],
+      });
+    } catch (err: any) {
+      toast.error("Unable to share", {
+        description:
+          err?.message ?? "Something went wrong while preparing the image.",
+      });
+    } finally {
+      setIsSharingToStory(false);
+    }
+  };
 
   useEffect(() => {
-    if (!session?.user) return
-    fetchAcceptMessages()
-    fetchMessages()
-  }, [session])
+    if (!session?.user) return;
+    fetchAcceptMessages();
+    fetchMessages();
+  }, [session]);
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(profileUrl)
-      setCopied(true)
-      toast.success("Link copied!")
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(profileUrl);
+      setCopied(true);
+      toast.success("Link copied!");
+      setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy link")
+      toast.error("Failed to copy link");
     }
-  }
+  };
 
   const handleSwitchChange = async () => {
-    setIsToggling(true)
+    setIsToggling(true);
     try {
       const response = await axios.post<apiResponse>("/api/accept-messages", {
         acceptMessages: !acceptMessages,
-      })
-      setAcceptMessages(!acceptMessages)
-      toast.success(response.data.message)
+      });
+      setAcceptMessages(!acceptMessages);
+      toast.success(response.data.message);
     } catch {
-      toast.error("Failed to update settings")
+      toast.error("Failed to update settings");
     } finally {
-      setIsToggling(false)
+      setIsToggling(false);
     }
-  }
+  };
 
   const handleDeleteMessage = (messageId: string) => {
-    setMessages((prev) => prev.filter((msg) => msg._id !== messageId))
-  }
+    setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+  };
 
-  if (!session?.user) return <div className="text-center h-screen flex items-center justify-center">Loading...</div>
+  if (!session?.user)
+    return (
+      <div className="text-center h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-10 min-h-screen max-w-6xl">
@@ -105,7 +184,9 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-1">
-              {(isSwitchLoading || isToggling) && <Loader2 className="h-3 w-3 animate-spin" />}
+              {(isSwitchLoading || isToggling) && (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              )}
               <Switch
                 checked={acceptMessages}
                 onCheckedChange={handleSwitchChange}
@@ -113,13 +194,31 @@ export default function DashboardPage() {
               />
             </div>
             <Button
+              size="sm"
+              variant="outline"
+              className="h-10 px-4"
+              disabled={isSharingToStory}
+              onClick={shareToStory}
+            >
+              {isSharingToStory ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <ImagePlus className="h-4 w-4 mr-2" />
+              )}
+              {isSharingToStory ? "Preparing…" : "Share to Story"}
+            </Button>
+            <Button
               variant="outline"
               onClick={() => fetchMessages(true)}
               disabled={isRefreshing || isMessagesLoading}
               size="sm"
               className="h-10 px-4"
             >
-              {isRefreshing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
               <span className="text-sm">Refresh</span>
             </Button>
           </div>
@@ -136,7 +235,11 @@ export default function DashboardPage() {
                 readOnly
                 className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <Button onClick={copyToClipboard} size="lg" className="text-base h-12">
+              <Button
+                onClick={copyToClipboard}
+                size="lg"
+                className="text-base h-12"
+              >
                 {copied ? (
                   <>
                     <Check className="h-5 w-5 mr-2" />
@@ -159,7 +262,9 @@ export default function DashboardPage() {
       {/* Messages Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Messages {!isMessagesLoading && `(${messages.length})`}</h2>
+          <h2 className="text-2xl font-bold">
+            Messages {!isMessagesLoading && `(${messages.length})`}
+          </h2>
         </div>
 
         {/* Loading State */}
@@ -186,20 +291,30 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-8 text-center">
               <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
-              <p className="text-base text-muted-foreground">Share your link to start receiving messages</p>
+              <p className="text-base text-muted-foreground">
+                Share your link to start receiving messages
+              </p>
             </CardContent>
           </Card>
         ) : (
           /* Messages Grid */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {messages
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+              )
               .map((message) => (
-                <MessageCard key={message._id as string} message={message as any} onMessageDelete={handleDeleteMessage} />
+                <MessageCard
+                  key={message._id as string}
+                  message={message as any}
+                  onMessageDelete={handleDeleteMessage}
+                />
               ))}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
