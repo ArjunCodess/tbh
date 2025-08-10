@@ -6,7 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Check, RefreshCw, Loader2, ImagePlus, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Check,
+  RefreshCw,
+  Loader2,
+  ImagePlus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import type { Message } from "@/lib/models/message.schema";
@@ -31,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Image from "next/image";
 
 type ThreadLite = { _id?: string; title: string; slug: string };
 
@@ -64,6 +72,11 @@ export default function DashboardClient({
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [isDeletingSlug, setIsDeletingSlug] = useState<string | null>(null);
   const [newThreadTitle, setNewThreadTitle] = useState("");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    for (const t of initialThreads) initial[t.slug] = false;
+    return initial;
+  });
   const initialSelected =
     initialThreads.find((t) => t.slug === "ama")?.slug ||
     initialThreads[0]?.slug ||
@@ -135,7 +148,7 @@ export default function DashboardClient({
       const selectedPath =
         imagePaths[Math.floor(Math.random() * imagePaths.length)];
 
-      const img = new Image();
+      const img = new window.Image();
       img.crossOrigin = "anonymous";
       img.src = selectedPath;
 
@@ -363,7 +376,8 @@ export default function DashboardClient({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Create a new thread</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Enter a title. We will generate a unique slug per your account.
+                      Enter a title. We will generate a unique slug per your
+                      account.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <div className="mt-2">
@@ -437,77 +451,131 @@ export default function DashboardClient({
           const list = messagesByThread[t.slug] || [];
           const isLoading = !!loadingThreads[t.slug];
           return (
-            <div key={t.slug} className="space-y-3">
+            <div
+              key={t.slug}
+              className="w-full space-y-3 border-b border-gray-200 pb-6 mb-6 last:border-b-0"
+            >
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">
-                  {t.title} — {!isLoading && `${list.length}`}
-                </h2>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  disabled={t.slug === 'ama' || isDeletingSlug === t.slug}
-                  onClick={async () => {
-                    try {
-                      setIsDeletingSlug(t.slug);
-                      await axios.delete("/api/threads", { data: { slug: t.slug } });
-                      setThreads((prev) => prev.filter((x) => x.slug !== t.slug));
-                      setMessagesByThread((prev) => {
-                        const copy = { ...prev } as any;
-                        delete copy[t.slug];
-                        return copy;
-                      });
-                      toast.success("Thread deleted");
-                    } catch (e: any) {
-                      toast.error("Failed to delete thread", { description: e?.response?.data?.message || e?.message });
-                    } finally {
-                      setIsDeletingSlug(null);
-                    }
-                  }}
+                <button
+                  type="button"
+                  className="flex items-center gap-3 group w-full"
+                  onClick={() =>
+                    setExpanded((prev) => ({
+                      ...prev,
+                      [t.slug]: !(prev[t.slug] ?? true),
+                    }))
+                  }
+                  aria-expanded={expanded[t.slug] ?? true}
                 >
-                  {isDeletingSlug === t.slug ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                </Button>
-              </div>
-              {isLoading ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <Card key={i}>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="h-5 bg-muted rounded animate-pulse" />
-                          <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
-                          <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
-                          <div className="flex gap-2 pt-2">
-                            <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
-                            <div className="h-9 w-12 bg-muted rounded animate-pulse" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : list.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <h3 className="text-xl font-semibold mb-2">
-                      No messages yet
-                    </h3>
-                    <p className="text-base text-muted-foreground">
-                      Share your link to start receiving messages
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {list.map((message) => (
-                    <MessageCard
-                      key={message._id as string}
-                      message={message as any}
-                      onMessageDelete={handleDeleteMessageFactory(t.slug)}
-                      threadTitle={t.title}
+                  {expanded[t.slug] ?? true ? (
+                    <Image
+                      src="/folder-open.svg"
+                      alt="folder open"
+                      className="h-8 w-8"
+                      width={32}
+                      height={32}
                     />
-                  ))}
-                </div>
-              )}
+                  ) : (
+                    <Image
+                      src="/folder-closed.svg"
+                      alt="folder closed"
+                      className="h-8 w-8 opacity-90"
+                      width={32}
+                      height={32}
+                    />
+                  )}
+                  <h2 className="text-2xl font-bold w-full text-left">
+                    {t.title} — {!isLoading && `${list.length}`}
+                  </h2>
+                </button>
+                {t.slug !== "ama" && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        {isDeletingSlug === t.slug ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this thread?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the thread and its grouping messages.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            try {
+                              setIsDeletingSlug(t.slug);
+                              await axios.delete("/api/threads", { data: { slug: t.slug } });
+                              setThreads((prev) => prev.filter((x) => x.slug !== t.slug));
+                              setMessagesByThread((prev) => {
+                                const copy = { ...prev } as any;
+                                delete copy[t.slug];
+                                return copy;
+                              });
+                              toast.success("Thread deleted");
+                            } catch (e: any) {
+                              toast.error("Failed to delete thread", { description: e?.response?.data?.message || e?.message });
+                            } finally {
+                              setIsDeletingSlug(null);
+                            }
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+              {(expanded[t.slug] ?? true) &&
+                (isLoading ? (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i}>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="h-5 bg-muted rounded animate-pulse" />
+                            <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
+                            <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+                            <div className="flex gap-2 pt-2">
+                              <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
+                              <div className="h-9 w-12 bg-muted rounded animate-pulse" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : list.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <h3 className="text-xl font-semibold mb-2">
+                        No messages yet
+                      </h3>
+                      <p className="text-base text-muted-foreground">
+                        Share your link to start receiving messages
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {list.map((message) => (
+                      <MessageCard
+                        key={message._id as string}
+                        message={message as any}
+                        onMessageDelete={handleDeleteMessageFactory(t.slug)}
+                        threadTitle={t.title}
+                      />
+                    ))}
+                  </div>
+                ))}
             </div>
           );
         })}
