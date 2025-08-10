@@ -3,8 +3,10 @@ import connectToDatabase from '@/lib/connectToDatabase';
 import UserModel from '@/lib/models/user.schema';
 import { getServerSession } from 'next-auth';
 import authOptions from '@/app/api/auth/[...nextauth]/options';
+import ThreadModel from '@/lib/models/thread.schema';
+import { NextRequest } from 'next/server';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
      await connectToDatabase();
 
      const session = await getServerSession(authOptions);
@@ -14,21 +16,35 @@ export async function GET() {
 
      const userId = new mongoose.Types.ObjectId(_user._id);
 
+     const { searchParams } = new URL(req.url);
+     const threadSlug = searchParams.get('threadSlug');
+     const threadIdParam = searchParams.get('threadId');
+
+     let targetThreadId: mongoose.Types.ObjectId | null = null;
+     if (threadIdParam && mongoose.isValidObjectId(threadIdParam)) {
+       targetThreadId = new mongoose.Types.ObjectId(threadIdParam);
+     } else {
+       const slug = threadSlug || 'ama';
+       const thread = await ThreadModel.findOne({ userId, slug }, { _id: 1 }).lean();
+       if (thread) targetThreadId = new mongoose.Types.ObjectId(thread._id as any);
+     }
+
      try {
-          const messages = await UserModel.aggregate([
-               // Stage 1: Match documents where _id is equal to the given userId
+          const pipeline: any[] = [
                { $match: { _id: userId } },
-
-               // Stage 2: Deconstruct the 'messages' array field from the input documents to output a document for each element.
                { $unwind: '$messages' },
+          ];
 
-               // Stage 3: Sort the resulting documents by 'messages.createdAt' in descending order.
-               { $sort: { 'messages.createdAt': -1 } },
+          if (targetThreadId) {
+            pipeline.push({ $match: { 'messages.threadId': targetThreadId } });
+          }
 
-               // Stage 4: Group the documents back into a single document per user, with an array of all 'messages', now sorted by 'createdAt'.
-               { $group: { _id: '$_id', messages: { $push: '$messages' } } },
-          ])
-               .exec(); // Execute the aggregation pipeline and return the result
+          pipeline.push(
+            { $sort: { 'messages.createdAt': -1 } },
+            { $group: { _id: '$_id', messages: { $push: '$messages' } } },
+          );
+
+          const messages = await UserModel.aggregate(pipeline).exec();
 
           if (!messages) {
             return Response.json(
