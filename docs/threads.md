@@ -54,8 +54,8 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 ### phase 5 — question image api
 - `app/api/question-image-generation/route.tsx`
   - already supports `?question=...`
-  - usage: supply the current thread’s title as `question` to replace the prior static label
-  - example: `/api/question-image-generation?question=${encodeURIComponent(currentThreadTitle)}`
+  - usage: supply the current thread’s title as `type` to replace the prior static label
+  - example: `/api/question-image-generation?type=${encodeURIComponent(currentThreadTitle)}`
 
 ### phase 6 — sign-up defaulting
 - when a new user signs up, automatically create the default `ama` thread

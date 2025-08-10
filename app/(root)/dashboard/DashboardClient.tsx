@@ -12,6 +12,25 @@ import axios from "axios";
 import type { Message } from "@/lib/models/message.schema";
 import type { apiResponse } from "@/types/apiResponse";
 import { toPng } from "html-to-image";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type ThreadLite = { _id?: string; title: string; slug: string };
 
@@ -33,21 +52,35 @@ export default function DashboardClient({
   const [isSwitchLoading] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [threads, setThreads] = useState<ThreadLite[]>(initialThreads);
-  const [messagesByThread, setMessagesByThread] = useState<Record<string, Message[]>>(initialMessagesByThread);
+  const [messagesByThread, setMessagesByThread] = useState<
+    Record<string, Message[]>
+  >(initialMessagesByThread);
   const [isThreadsLoading, setIsThreadsLoading] = useState(false);
-  const [loadingThreads, setLoadingThreads] = useState<Record<string, boolean>>({});
+  const [loadingThreads, setLoadingThreads] = useState<Record<string, boolean>>(
+    {}
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSharingToStory, setIsSharingToStory] = useState(false);
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [newThreadTitle, setNewThreadTitle] = useState("");
+  const initialSelected =
+    initialThreads.find((t) => t.slug === "ama")?.slug ||
+    initialThreads[0]?.slug ||
+    "ama";
+  const [selectedThreadSlug, setSelectedThreadSlug] =
+    useState<string>(initialSelected);
 
-  const profileUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/profile/${username}`;
+  const profileUrl = `${
+    typeof window !== "undefined" ? window.location.origin : ""
+  }/profile/${username}?type=${encodeURIComponent(selectedThreadSlug)}`;
 
   const fetchThreadsAndMessages = async (showRefreshToast = false) => {
     if (showRefreshToast) setIsRefreshing(true);
     setIsThreadsLoading(true);
     try {
-      const tRes = await axios.get<{ success: boolean; threads: ThreadLite[] }>("/api/threads");
+      const tRes = await axios.get<{ success: boolean; threads: ThreadLite[] }>(
+        "/api/threads"
+      );
       const fetchedThreads = tRes.data?.threads || [];
       const ordered = [
         ...fetchedThreads.filter((t) => t.slug === "ama"),
@@ -65,7 +98,10 @@ export default function DashboardClient({
             .get<apiResponse>(`/api/get-messages`, {
               params: { threadSlug: t.slug },
             })
-            .then((r) => ({ slug: t.slug, messages: (r.data.messages || []) as Message[] }))
+            .then((r) => ({
+              slug: t.slug,
+              messages: (r.data.messages || []) as Message[],
+            }))
             .catch(() => ({ slug: t.slug, messages: [] as Message[] }))
         )
       );
@@ -73,7 +109,8 @@ export default function DashboardClient({
       const map: Record<string, Message[]> = {};
       results.forEach(({ slug, messages }) => {
         const sorted = [...messages].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         map[slug] = sorted;
       });
@@ -94,7 +131,8 @@ export default function DashboardClient({
     let wrapper: HTMLDivElement | null = null;
     try {
       const imagePaths = ["/qna1.png", "/qna2.png", "/qna3.png", "/qna4.png"];
-      const selectedPath = imagePaths[Math.floor(Math.random() * imagePaths.length)];
+      const selectedPath =
+        imagePaths[Math.floor(Math.random() * imagePaths.length)];
 
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -136,7 +174,10 @@ export default function DashboardClient({
         files: [file],
       });
     } catch (err: any) {
-      toast.error("Unable to share", { description: err?.message ?? "Something went wrong while preparing the image." });
+      toast.error("Unable to share", {
+        description:
+          err?.message ?? "Something went wrong while preparing the image.",
+      });
     } finally {
       if (wrapper && document.body.contains(wrapper)) {
         document.body.removeChild(wrapper);
@@ -157,20 +198,25 @@ export default function DashboardClient({
         // optimistic add with count 0
         setThreads((prev) => {
           const exists = prev.some((t) => t.slug === created.slug);
-          const ordered = [
-            ...(created.slug === "ama" ? [created] : []),
-            ...prev.filter((t) => t.slug !== created.slug && t.slug === "ama"),
-            ...prev.filter((t) => t.slug !== "ama" && t.slug !== created.slug),
-            ...(created.slug !== "ama" ? [created] : []),
-          ];
+          const ama = prev.find((t) => t.slug === "ama");
+          const others = prev.filter(
+            (t) => t.slug !== "ama" && t.slug !== created.slug
+          );
+          const ordered = [...(ama ? [ama] : []), ...others, created];
           return exists ? prev : ordered;
         });
-        setMessagesByThread((prev) => ({ ...prev, [created.slug]: prev[created.slug] || [] }));
+        setMessagesByThread((prev) => ({
+          ...prev,
+          [created.slug]: prev[created.slug] || [],
+        }));
+        setSelectedThreadSlug(created.slug);
       }
       // also refresh in background to ensure consistency
       fetchThreadsAndMessages(true);
     } catch (e: any) {
-      toast.error("Failed to create thread", { description: e?.response?.data?.message || e?.message });
+      toast.error("Failed to create thread", {
+        description: e?.response?.data?.message || e?.message,
+      });
     } finally {
       setIsCreatingThread(false);
     }
@@ -190,7 +236,9 @@ export default function DashboardClient({
   const handleSwitchChange = async (checked: boolean) => {
     setIsToggling(true);
     try {
-      const response = await axios.post<apiResponse>("/api/accept-messages", { acceptMessages: checked });
+      const response = await axios.post<apiResponse>("/api/accept-messages", {
+        acceptMessages: checked,
+      });
       setAcceptMessages(checked);
       toast.success(response.data.message);
     } catch {
@@ -200,12 +248,15 @@ export default function DashboardClient({
     }
   };
 
-  const handleDeleteMessageFactory = (threadSlug: string) => (messageId: string) => {
-    setMessagesByThread((prev) => ({
-      ...prev,
-      [threadSlug]: (prev[threadSlug] || []).filter((m) => (m._id as any) !== messageId),
-    }));
-  };
+  const handleDeleteMessageFactory =
+    (threadSlug: string) => (messageId: string) => {
+      setMessagesByThread((prev) => ({
+        ...prev,
+        [threadSlug]: (prev[threadSlug] || []).filter(
+          (m) => (m._id as any) !== messageId
+        ),
+      }));
+    };
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-10 min-h-screen max-w-6xl">
@@ -263,7 +314,11 @@ export default function DashboardClient({
                 readOnly
                 className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <Button onClick={copyToClipboard} size="lg" className="text-base h-12">
+              <Button
+                onClick={copyToClipboard}
+                size="lg"
+                className="text-base h-12"
+              >
                 {copied ? (
                   <>
                     <Check className="h-5 w-5 mr-2" />
@@ -278,28 +333,65 @@ export default function DashboardClient({
               </Button>
             </div>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-              <input
-                type="text"
-                placeholder="New thread title"
-                value={newThreadTitle}
-                onChange={(e) => setNewThreadTitle(e.target.value)}
-                className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <Button
-                onClick={handleCreateThread}
-                disabled={isCreatingThread || !newThreadTitle.trim()}
-                size="lg"
-                className="text-base h-12"
-              >
-                {isCreatingThread ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating…
-                  </>
-                ) : (
-                  "Add Thread"
-                )}
-              </Button>
+              <div className="w-full">
+                <Select
+                  value={selectedThreadSlug}
+                  onValueChange={(v) => setSelectedThreadSlug(v)}
+                >
+                  <SelectTrigger className="w-full flex-1 px-4 py-3 min-h-12 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring">
+                    <SelectValue placeholder="Select thread" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {threads.map((t) => (
+                        <SelectItem key={t.slug} value={t.slug}>
+                          {t.title}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="lg" className="text-base h-12">
+                    Add Thread
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Create a new thread</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Enter a title. We will generate a unique slug per your account.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      placeholder="Thread title"
+                      value={newThreadTitle}
+                      onChange={(e) => setNewThreadTitle(e.target.value)}
+                      className="w-full px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleCreateThread}
+                      disabled={isCreatingThread || !newThreadTitle.trim()}
+                    >
+                      {isCreatingThread ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creating…
+                        </>
+                      ) : (
+                        "Create"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -346,7 +438,9 @@ export default function DashboardClient({
           return (
             <div key={t.slug} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">{t.title} — {(!isLoading) && `${list.length}`}</h2>
+                <h2 className="text-2xl font-bold">
+                  {t.title} — {!isLoading && `${list.length}`}
+                </h2>
               </div>
               {isLoading ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -369,7 +463,9 @@ export default function DashboardClient({
               ) : list.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No messages yet
+                    </h3>
                     <p className="text-base text-muted-foreground">
                       Share your link to start receiving messages
                     </p>
