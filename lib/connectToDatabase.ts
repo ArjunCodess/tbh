@@ -31,15 +31,15 @@ export default async function connectToDatabase(): Promise<void> {
   try {
     connection.connectionPromise = mongoose.connect(uri);
     await connection.connectionPromise;
-    const currentReadyState = Number(mongoose.connection.readyState);
-    connection.isConnected = currentReadyState === 1;
+    connection.isConnected = mongoose.connection.readyState === 1;
     if (connection.isConnected) {
       console.log("Database connection established.");
     }
   } catch (error) {
     connection.isConnected = false;
-    connection.connectionPromise = undefined;
     console.error("Failed to connect to database.", error);
     throw error;
+  } finally {
+    connection.connectionPromise = undefined;
   }
 }
