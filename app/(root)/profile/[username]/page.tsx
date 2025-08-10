@@ -22,7 +22,7 @@ export default async function Page({
   return (
     <main className="min-h-[calc(100dvh-0px)] w-full px-4 py-6 md:py-10">
       <div className="mx-auto w-full max-w-2xl">
-        <section className="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <section className="rounded-lg border bg-card text-card-foreground shadow-xs">
           <div className="p-6 md:p-8">
             <h1 className="text-xl font-semibold tracking-tight md:text-2xl">Send an anonymous message</h1>
             <p className="mt-1 text-sm text-muted-foreground">to @{username}</p>

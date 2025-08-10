@@ -6,7 +6,7 @@ import SparklesText from "@/components/magicui/sparkles-text";
 export default function Hero() {
     return (
         <main className="bg-neutral-950">
-            <div className="rounded-3xl py-20 sm:py-30 md:py-40 h-[90vh] flex flex-col items-center justify-center text-center bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 mx-3 md:mx-5">
+            <div className="rounded-3xl py-20 sm:py-30 md:py-40 h-[90vh] flex flex-col items-center justify-center text-center bg-linear-to-tr from-yellow-500 via-orange-500 to-violet-500 mx-3 md:mx-5">
                 <div className="max-w-5xl">
                     <SparklesText text="real friends." className="text-5xl sm:text-7xl md:text-9xl text-white" />
                     <SparklesText text="real fun!" className="text-5xl sm:text-7xl md:text-9xl text-white" />
@@ -36,7 +36,7 @@ export default function Hero() {
                         just better!
                     </h1>
                     <div className="md:w-11/12 flex md:flex-row flex-col md:space-x-5 space-y-3 md:space-y-0 space-x-0 w-full mx-auto">
-                        <Link href={"/sign-up"} className="md:w-1/2 md:text-base bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full">
+                        <Link href={"/sign-up"} className="md:w-1/2 md:text-base bg-linear-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full">
                             <button className="h-10 px-4 py-2 text-white">
                                 Create an account <ArrowRight className="w-5 h-5 inline" />
                             </button>

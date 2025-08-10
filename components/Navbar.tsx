@@ -48,7 +48,7 @@ export default function Navbar() {
                         </DropdownMenuContent>
                     </DropdownMenu>
                     : (
-                        <Button className="text-sm md:text-base bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full h-10 px-4 py-2 text-white">
+                        <Button className="text-sm md:text-base bg-linear-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full h-10 px-4 py-2 text-white">
                             <Link href={"/sign-up"}>
                                 Create an account <ArrowRight className="w-5 h-5 inline" />
                             </Link>

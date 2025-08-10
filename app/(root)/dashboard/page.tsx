@@ -233,7 +233,7 @@ export default function DashboardPage() {
                 type="text"
                 value={profileUrl}
                 readOnly
-                className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-hidden focus:ring-2 focus:ring-ring"
               />
               <Button
                 onClick={copyToClipboard}
