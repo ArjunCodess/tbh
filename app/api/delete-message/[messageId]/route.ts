@@ -6,12 +6,16 @@ import authOptions from '@/app/api/auth/[...nextauth]/options';
 export async function DELETE(request: Request, { params }: { params: Promise<{ messageId: string }> }) {
      const { messageId } = await params;
 
-     await connectToDatabase();
+     if (!messageId) {
+          return Response.json({ success: false, message: 'messageId is required' }, { status: 400 });
+     }
 
      const session = await getServerSession(authOptions);
      const _user = (session as any)?.user as any;
 
      if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+
+     await connectToDatabase();
 
      // NOTE: userId not needed directly here; using _user._id in the query below
 

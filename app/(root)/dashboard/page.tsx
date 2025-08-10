@@ -21,7 +21,7 @@ import type { apiResponse } from "@/types/apiResponse";
 import html2canvas from "html2canvas";
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [copied, setCopied] = useState(false);
   const [acceptMessages, setAcceptMessages] = useState(false);
   const [isSwitchLoading, setIsSwitchLoading] = useState(true);
@@ -58,7 +58,12 @@ export default function DashboardPage() {
 
     try {
       const response = await axios.get<apiResponse>("/api/get-messages");
-      setMessages(response.data.messages || []);
+      const fetchedMessages: Message[] = response.data.messages || [];
+      const sortedMessages = [...fetchedMessages].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setMessages(sortedMessages);
       if (showRefreshToast) {
         toast.success("Messages refreshed");
       }
@@ -73,6 +78,7 @@ export default function DashboardPage() {
   const shareToStory = async () => {
     if (isSharingToStory) return;
     setIsSharingToStory(true);
+    let wrapper: HTMLDivElement | null = null;
     try {
       const imagePaths = ["/qna1.png", "/qna2.png", "/qna3.png", "/qna4.png"];
       const selectedPath =
@@ -99,7 +105,7 @@ export default function DashboardPage() {
         img.addEventListener("error", onError);
       });
 
-      const wrapper = document.createElement("div");
+      wrapper = document.createElement("div");
       wrapper.style.position = "fixed";
       wrapper.style.left = "-10000px";
       wrapper.style.top = "0";
@@ -117,8 +123,6 @@ export default function DashboardPage() {
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], "question.png", { type: "image/png" });
 
-      document.body.removeChild(wrapper);
-
       await navigator.share({
         title: "Share TBH Question",
         text: "Check out this question sent to me anonymously on TBH.",
@@ -130,15 +134,18 @@ export default function DashboardPage() {
           err?.message ?? "Something went wrong while preparing the image.",
       });
     } finally {
+      if (wrapper && document.body.contains(wrapper)) {
+        document.body.removeChild(wrapper);
+      }
       setIsSharingToStory(false);
     }
   };
 
   useEffect(() => {
-    if (!session?.user) return;
+    if (status !== "authenticated") return;
     fetchAcceptMessages();
     fetchMessages();
-  }, [session]);
+  }, [status]);
 
   const copyToClipboard = async () => {
     try {
@@ -151,13 +158,13 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSwitchChange = async () => {
+  const handleSwitchChange = async (checked: boolean) => {
     setIsToggling(true);
     try {
       const response = await axios.post<apiResponse>("/api/accept-messages", {
-        acceptMessages: !acceptMessages,
+        acceptMessages: checked,
       });
-      setAcceptMessages(!acceptMessages);
+      setAcceptMessages(checked);
       toast.success(response.data.message);
     } catch {
       toast.error("Failed to update settings");
@@ -170,12 +177,21 @@ export default function DashboardPage() {
     setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
   };
 
-  if (!session?.user)
+  if (status === "loading") {
     return (
       <div className="text-center h-screen flex items-center justify-center">
         Loading...
       </div>
     );
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="text-center h-screen flex items-center justify-center">
+        You must sign in to view the dashboard.
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-10 min-h-screen max-w-6xl">
@@ -194,9 +210,9 @@ export default function DashboardPage() {
               />
             </div>
             <Button
-              size="sm"
+              size="default"
               variant="outline"
-              className="h-10 px-4"
+              className="px-4"
               disabled={isSharingToStory}
               onClick={shareToStory}
             >
@@ -211,8 +227,8 @@ export default function DashboardPage() {
               variant="outline"
               onClick={() => fetchMessages(true)}
               disabled={isRefreshing || isMessagesLoading}
-              size="sm"
-              className="h-10 px-4"
+              size="default"
+              className="px-4"
             >
               {isRefreshing ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -233,7 +249,7 @@ export default function DashboardPage() {
                 type="text"
                 value={profileUrl}
                 readOnly
-                className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-hidden focus:ring-2 focus:ring-ring"
+                className="flex-1 px-4 py-3 text-base bg-muted rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
                 onClick={copyToClipboard}
@@ -299,13 +315,7 @@ export default function DashboardPage() {
         ) : (
           /* Messages Grid */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {messages
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
-              )
-              .map((message) => (
+            {messages.map((message) => (
                 <MessageCard
                   key={message._id as string}
                   message={message as any}

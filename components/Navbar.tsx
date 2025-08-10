@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useSession, signOut } from "next-auth/react";
@@ -9,7 +9,7 @@ import { ArrowRight } from "lucide-react"
 
 export default function Navbar() {
     const { data: session } = useSession();
-    const user = session?.user as any;
+    const user = session?.user;
 
     return (
         <header>
@@ -18,7 +18,7 @@ export default function Navbar() {
                     TBH
                 </Link>
 
-                {(session && user?.username && user?.email)
+                {(session?.user)
                     ? <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="rounded-full">
@@ -29,22 +29,22 @@ export default function Navbar() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel className="font-medium">
-                                Logged in as <span className="font-bold">@{user.username}</span>
+                                Logged in as <span className="font-bold">@{user?.username ?? user?.email}</span>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <Button className="w-full" variant="ghost" asChild>
+                            <DropdownMenuItem asChild>
                                 <Link href="/dashboard">
                                     <UserIcon className="mr-2 h-4 w-4" />
                                     Dashboard
                                 </Link>
-                            </Button>
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <Button className="w-full" variant="ghost" asChild>
-                                <Link href="/sign-in" onClick={() => signOut()}>
+                            <DropdownMenuItem asChild>
+                                <Link href="/sign-in" onClick={async (e) => { e.preventDefault(); await signOut({ callbackUrl: "/sign-in" }); }}>
                                     <LogOutIcon className="mr-2 h-4 w-4" />
                                     Logout
                                 </Link>
-                            </Button>
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     : (
