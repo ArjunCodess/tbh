@@ -23,11 +23,11 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ username: string }>
-  searchParams?: Promise<{ type?: string }>
+  searchParams?: Promise<{ q?: string }>
 }) {
   const { username } = await params;
-  const { type } = (searchParams ? await searchParams : {}) as { type?: string };
-  const selectedThreadSlug = type || 'ama';
+  const { q } = (searchParams ? await searchParams : {}) as { q?: string };
+  const selectedThreadSlug = q || 'ama';
   await connectToDatabase();
   const user = await findUserByUsernameCI(username);
   let threads: { title: string; slug: string }[] = [];

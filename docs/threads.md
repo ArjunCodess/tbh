@@ -5,7 +5,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 ### goals
 - **threads on dashboard**: show separated sections for each thread
 - **default**: "ask me anything" remains the default everywhere
-- **profile selector**: add a dropdown ("dropper") bound to `?type` to select thread
+- **profile selector**: add a dropdown ("dropper") bound to `?q` to select thread
 - **db**: introduce `Thread` and link `Message` to a thread; write a backfill migration
 - **image api**: support custom titles via `?question=...` (use provided question in place of the static title)
 
@@ -13,7 +13,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 - **canonical default thread**
   - name: "ask me anything"
   - slug: `ama`
-- **profile url parameter**: `?type=<thread-slug>` with fallback to `ama`
+- **profile url parameter**: `?q=<thread-slug>` with fallback to `ama`
 - **display order**: default thread first, then most recently created
 
 ### phase 1 — database changes
@@ -55,7 +55,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 - `app/api/question-image-generation/route.tsx`
   - already supports `?question=...`
   - usage: supply the current thread’s title as `type` to replace the prior static label
-  - example: `/api/question-image-generation?type=${encodeURIComponent(currentThreadTitle)}`
+  - example: `/api/question-image-generation?q=${encodeURIComponent(currentThreadTitle)}`
 
 ### phase 6 — sign-up defaulting
 - when a new user signs up, automatically create the default `ama` thread
@@ -90,7 +90,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 - [ ] add `/api/threads` (get, post) for authenticated users
 - [ ] update `/api/get-messages` to accept `threadId`/`threadSlug` filter with default fallback
 - [ ] update `/api/send-message` to accept and apply `threadSlug` (default `ama`)
-- [ ] add profile dropdown bound to `?type=<slug>`; default to `ama`
+- [ ] add profile dropdown bound to `?q=<slug>`; default to `ama`
 - [ ] pass selected thread to `MessageForm` and send-message request
 - [ ] update dashboard to render separated sections per thread
 - [ ] integrate thread title with `/api/question-image-generation?question=...&`

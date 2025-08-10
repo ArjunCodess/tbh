@@ -72,7 +72,7 @@ export default function DashboardClient({
 
   const profileUrl = `${
     typeof window !== "undefined" ? window.location.origin : ""
-  }/profile/${username}?type=${encodeURIComponent(selectedThreadSlug)}`;
+  }/profile/${username}?q=${encodeURIComponent(selectedThreadSlug)}`;
 
   const fetchThreadsAndMessages = async (showRefreshToast = false) => {
     if (showRefreshToast) setIsRefreshing(true);
