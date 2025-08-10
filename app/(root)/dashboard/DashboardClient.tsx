@@ -75,7 +75,7 @@ export default function DashboardClient({
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    for (const t of initialThreads) initial[t.slug] = false;
+    for (const t of initialThreads) initial[t.slug] = t.slug === "ama";
     return initial;
   });
   const initialSelected =
