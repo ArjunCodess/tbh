@@ -29,7 +29,6 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.11",
     "framer-motion": "^11.3.24",
-    "fs": "^0.0.1-security",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.395.0",
     "mongodb": "^6.7.0",
