@@ -478,6 +478,7 @@ export default function DashboardClient({
                       key={message._id as string}
                       message={message as any}
                       onMessageDelete={handleDeleteMessageFactory(t.slug)}
+                      threadTitle={t.title}
                     />
                   ))}
                 </div>

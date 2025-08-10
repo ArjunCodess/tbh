@@ -52,10 +52,10 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
   - server-render threads list for the profile user; the dropdown itself can be a tiny client component wrapped in `Suspense`
 
 ### phase 5 — question image api
-- `app/api/question-image-generation/route.tsx`
+- `app/api/reply-image-generation/route.tsx`
   - already supports `?question=...`
-  - usage: supply the current thread’s title as `type` to replace the prior static label
-  - example: `/api/question-image-generation?q=${encodeURIComponent(currentThreadTitle)}`
+  - usage: supply the current thread’s title as `q` to replace the prior static label
+  - example: `/api/reply-image-generation?q=${encodeURIComponent(currentThreadTitle)}`
 
 ### phase 6 — sign-up defaulting
 - when a new user signs up, automatically create the default `ama` thread
@@ -93,6 +93,6 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 - [ ] add profile dropdown bound to `?q=<slug>`; default to `ama`
 - [ ] pass selected thread to `MessageForm` and send-message request
 - [ ] update dashboard to render separated sections per thread
-- [ ] integrate thread title with `/api/question-image-generation?question=...&`
+- [ ] integrate thread title with `/api/reply-image-generation?question=...&`
 - [ ] create default thread at sign-up time
 - [ ] add minimal e2e tests for selection/submit and dashboard grouping

@@ -8,7 +8,8 @@ const font = fetch(new URL('../../../public/FONT.ttf', import.meta.url)).then(
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const question = searchParams.get('question');
+    const reply = searchParams.get('reply');
+    const thread = searchParams.get('thread') || 'ask me anything';
 
     const fontData = await font;
 
@@ -35,10 +36,10 @@ export async function GET(request: Request) {
                             <div tw="flex bg-black text-white justify-center" style={{
                                 backgroundImage: 'linear-gradient(90deg, #2563eb, #7c3aed)',
                             }}>
-                                <h2 tw="text-2xl">send me anonymous messages</h2>
+                                <h2 tw="text-2xl">{thread}</h2>
                             </div>
                             <div tw="flex p-5 justify-center text-2xl">
-                                <p>{question ? question : "Error. Please try again."}</p>
+                                <p>{reply ? reply : "Error. Please try again."}</p>
                             </div>
                         </div>
                         

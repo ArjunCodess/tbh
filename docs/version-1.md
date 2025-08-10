@@ -50,12 +50,12 @@
 - `app/api/delete-message/[messageId]/route.ts` (delete): remove a message by id for current user
 - `app/api/accept-messages/route.ts` (get/post): read/toggle `isAcceptingMessages`
 - `app/api/suggest-messages/route.ts` (get): returns a random triple of pre-canned questions separated by `||`
-- `app/api/question-image-generation/route.tsx` (get): returns an image for sharing a question (consumed in message detail page)
+- `app/api/reply-image-generation/route.tsx` (get): returns an image for sharing a question (consumed in message detail page)
 
 ### notable flows
 - **send anonymous message**: visitor opens `/profile/[username]` → composes message or taps a suggested message → `POST /api/send-message`
 - **manage inbox**: signed-in user opens `/dashboard` → toggles accept messages → views/deletes messages → opens message detail for sharing
-- **share to story**: on `/dashboard/message/[messageId]` → generates an image via `/api/question-image-generation` → shares via web share api
+- **share to story**: on `/dashboard/message/[messageId]` → generates an image via `/api/reply-image-generation` → shares via web share api
 
 ### limitations in v1
 - share qna prompt is minimally designed and rigid

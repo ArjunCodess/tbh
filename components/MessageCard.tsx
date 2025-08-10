@@ -28,11 +28,13 @@ dayjs.extend(relativeTime);
 type MessageCardProps = {
   message: Message;
   onMessageDelete: (messageId: string) => void;
+  threadTitle?: string;
 };
 
 export default function MessageCard({
   message,
   onMessageDelete,
+  threadTitle,
 }: MessageCardProps) {
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isSharing, setIsSharing] = React.useState(false);
@@ -55,11 +57,10 @@ export default function MessageCard({
   const handleShareStory = async () => {
     try {
       setIsSharing(true);
-      const res = await fetch(
-        `/api/question-image-generation?question=${encodeURIComponent(
-          message.content
-        )}`
-      );
+      const params = new URLSearchParams();
+      params.set("reply", message.content);
+      if (threadTitle) params.set("thread", threadTitle);
+      const res = await fetch(`/api/reply-image-generation?${params.toString()}`);
       if (!res.ok) throw new Error(`failed to generate image (${res.status})`);
       const blob = await res.blob();
 
