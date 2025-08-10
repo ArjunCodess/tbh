@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
 type ThreadLite = { _id?: string; title: string; slug: string };
 
@@ -484,9 +485,14 @@ export default function DashboardClient({
                       height={32}
                     />
                   )}
-                  <h2 className="text-2xl font-bold w-full text-left">
-                    {t.title} — {!isLoading && `${list.length}`}
-                  </h2>
+                  <div className="flex flex-row items-center gap-4">
+                    <h2 className="text-2xl font-bold w-full text-left">
+                      {t.title}
+                    </h2>
+                    <Badge className="size-6 min-w-0 min-h-0 p-0 flex items-center justify-center rounded-full text-sm">
+                      {!isLoading && `${list.length}`}
+                    </Badge>
+                  </div>
                 </button>
                 {t.slug !== "ama" && (
                   <AlertDialog>
@@ -503,7 +509,8 @@ export default function DashboardClient({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete this thread?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will permanently delete the thread and its grouping messages.
+                          This will permanently delete the thread and its
+                          grouping messages.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -512,8 +519,12 @@ export default function DashboardClient({
                           onClick={async () => {
                             try {
                               setIsDeletingSlug(t.slug);
-                              await axios.delete("/api/threads", { data: { slug: t.slug } });
-                              setThreads((prev) => prev.filter((x) => x.slug !== t.slug));
+                              await axios.delete("/api/threads", {
+                                data: { slug: t.slug },
+                              });
+                              setThreads((prev) =>
+                                prev.filter((x) => x.slug !== t.slug)
+                              );
                               setMessagesByThread((prev) => {
                                 const copy = { ...prev } as any;
                                 delete copy[t.slug];
@@ -521,7 +532,10 @@ export default function DashboardClient({
                               });
                               toast.success("Thread deleted");
                             } catch (e: any) {
-                              toast.error("Failed to delete thread", { description: e?.response?.data?.message || e?.message });
+                              toast.error("Failed to delete thread", {
+                                description:
+                                  e?.response?.data?.message || e?.message,
+                              });
                             } finally {
                               setIsDeletingSlug(null);
                             }
