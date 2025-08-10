@@ -41,6 +41,8 @@ export async function GET(request: Request) {
                                 <p>{question ? question : "Error. Please try again."}</p>
                             </div>
                         </div>
+                        
+                        {/* eslint-disable @next/next/no-img-element */}
                         <img
                             alt="tbh"
                             width={250}
