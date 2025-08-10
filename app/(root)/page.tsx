@@ -32,7 +32,7 @@ export default function Hero() {
               className="my-auto -mt-3 inline w-16 md:-mt-6 md:w-32"
               width={100}
               height={100}
-              src="/ngl.link.PNG"
+              src="/ngl.png"
               alt="NGL Link Logo"
             />{" "}
             clone — this is{" "}
