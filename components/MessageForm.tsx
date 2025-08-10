@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 type MessageFormProps = {
   username?: string;
+  threadSlug?: string;
 };
 
 const HARD_CODED_SUGGESTIONS = [
@@ -19,6 +20,7 @@ const HARD_CODED_SUGGESTIONS = [
 
 export default function MessageForm({
   username = "someone",
+  threadSlug,
 }: MessageFormProps) {
   const [content, setContent] = React.useState("");
   const [suggestions, setSuggestions] = React.useState<string[]>([
@@ -73,12 +75,15 @@ export default function MessageForm({
 
     try {
       setIsSubmitting(true);
-      const res = await fetch("/api/send-message", {
+      const params = new URLSearchParams();
+      if (threadSlug) params.set("thread", threadSlug);
+      const res = await fetch(`/api/send-message?${params.toString()}`.replace(/\?$/,'') , {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: content.trim(),
           username,
+          threadSlug,
         }),
       });
 

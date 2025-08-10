@@ -2,6 +2,9 @@ import MessageForm from "@/components/MessageForm";
 import ThreadDropdown from "@/components/ThreadDropdown";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import connectToDatabase from "@/lib/connectToDatabase";
+import { findUserByUsernameCI } from "@/lib/userIdentity";
+import ThreadModel from "@/lib/models/thread.schema";
 
 export async function generateMetadata({
   params,
@@ -17,13 +20,36 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>
+  searchParams?: Promise<{ type?: string }>
 }) {
   const { username } = await params;
-  const threads: { title: string; slug: string }[] = [
-    { title: "ask me anything", slug: "ama" },
-  ];
+  const { type } = (searchParams ? await searchParams : {}) as { type?: string };
+  const selectedThreadSlug = type || 'ama';
+  await connectToDatabase();
+  const user = await findUserByUsernameCI(username);
+  let threads: { title: string; slug: string }[] = [];
+  if (user?._id) {
+    const items = await ThreadModel.find(
+      { userId: user._id },
+      { title: 1, slug: 1 },
+      { lean: true }
+    )
+      .sort({ createdAt: -1 })
+      .exec();
+
+    const plain = (items || []).map((t: any) => ({
+      title: String(t?.title ?? ""),
+      slug: String(t?.slug ?? ""),
+    }));
+    const ama = plain.find((t) => t.slug === "ama");
+    const rest = plain.filter((t) => t.slug !== "ama");
+    threads = ama ? [ama, ...rest] : rest;
+  } else {
+    threads = [{ title: "ask me anything", slug: "ama" }];
+  }
 
   return (
     <main className="min-h-[calc(100dvh-0px)] w-full px-4 py-6 md:py-10">
@@ -37,7 +63,7 @@ export default async function Page({
               <Suspense fallback={<div className="mb-4 h-9 w-full rounded-md bg-muted animate-pulse" aria-hidden="true" />}> 
                 <ThreadDropdown threads={threads} />
               </Suspense>
-              <MessageForm username={username} />
+              <MessageForm username={username} threadSlug={selectedThreadSlug} />
             </div>
           </div>
         </section>
