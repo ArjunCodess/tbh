@@ -7,18 +7,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import {
-  Copy,
-  Check,
-  RefreshCw,
-  Loader2,
-  ImagePlus,
-} from "lucide-react";
+import { Copy, Check, RefreshCw, Loader2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import type { Message } from "@/lib/models/message.schema";
 import type { apiResponse } from "@/types/apiResponse";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -114,12 +108,10 @@ export default function DashboardPage() {
 
       await new Promise((r) => requestAnimationFrame(() => r(null)));
 
-      const canvas = await html2canvas(img, {
-        useCORS: true,
-        backgroundColor: null,
-        scale: 2,
+      const dataUrl = await toPng(img, {
+        cacheBust: true,
+        pixelRatio: 2,
       });
-      const dataUrl = canvas.toDataURL("image/png");
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], "question.png", { type: "image/png" });
 
@@ -316,12 +308,12 @@ export default function DashboardPage() {
           /* Messages Grid */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {messages.map((message) => (
-                <MessageCard
-                  key={message._id as string}
-                  message={message as any}
-                  onMessageDelete={handleDeleteMessage}
-                />
-              ))}
+              <MessageCard
+                key={message._id as string}
+                message={message as any}
+                onMessageDelete={handleDeleteMessage}
+              />
+            ))}
           </div>
         )}
       </div>

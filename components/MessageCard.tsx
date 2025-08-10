@@ -21,7 +21,7 @@ import { Button } from "./ui/button";
 import { toast } from "sonner";
 import type { Message } from "@/lib/models/message.schema";
 import type { apiResponse } from "@/types/apiResponse";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 
 dayjs.extend(relativeTime);
 
@@ -94,12 +94,10 @@ export default function MessageCard({
 
       await new Promise((r) => requestAnimationFrame(() => r(null)));
 
-      const canvas = await html2canvas(img, {
-        useCORS: true,
-        backgroundColor: null,
-        scale: 2,
+      const dataUrl = await toPng(img, {
+        cacheBust: true,
+        pixelRatio: 2,
       });
-      const dataUrl = canvas.toDataURL("image/png");
       const outBlob = await (await fetch(dataUrl)).blob();
       const file = new File([outBlob], "tbh-answer.png", { type: "image/png" });
 
