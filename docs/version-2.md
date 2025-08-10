@@ -21,27 +21,6 @@
   - message inbox with folders in sidebar; drag-drop between folders
   - thread view for multi q&a with reply composer
 
-### incremental migration plan
-1. prepare
-   - add feature flags: `USE_BETTER_AUTH`, `USE_AI_SUGGESTIONS`
-   - create compatibility layer for current session access to avoid large refactors at once
-2. next.js 15 upgrade
-   - upgrade `next`, `react`, `eslint-config-next`; address breaking changes (web/edge runtime, config)
-   - validate build and middleware behavior
-3. ai suggestions (gemini)
-   - add ai sdk and gemini provider
-   - implement `POST /api/ai/suggest` endpoint returning structured { questions[], answers[] }
-   - update profile send page to consume ai suggestions with graceful fallback to static
-4. data model evolution
-   - create `Folder` and `Thread` schemas; add indexes
-   - write migration to move existing `User.messages[]` into `Thread` with one entry per message under `Default` folder
-   - implement `GET/POST` apis for folders and threads
-5. share qna redesign
-   - create a new `/dashboard/share-qna` rsc-first page with client preview component lazily loaded
-   - add export to image and share; improve typography and themes
-6. cleanup
-   - remove compatibility layer and flags; delete unused routes
-
 ### apis (planned)
 - `POST /api/ai/suggest`: returns `questions[]`, `answers[]` using gemini
 - `GET/POST /api/folders`, `PATCH /api/folders/:id`, `DELETE /api/folders/:id`
@@ -58,3 +37,20 @@
 - folders visible in dashboard with basic CRUD
 - thread view supports multiple q&a entries under a conversation
 - share qna page is redesigned and can export/share images cleanly
+
+### todos
+
+| Done | Step | Task |
+|------|------|------|
+| ✅ | 1. prepare | add feature flags: `USE_AI_SUGGESTIONS` |
+| ✅ | 2. next.js 15 upgrade | upgrade `next`, `react`, `eslint-config-next`; address breaking changes (web/edge runtime, config) |
+| ✅ | 2. next.js 15 upgrade | validate build and middleware behavior |
+| ✅ | 3. ai suggestions (gemini) | add ai sdk and gemini provider |
+| ✅ | 3. ai suggestions (gemini) | implement `POST /api/ai/suggest` endpoint returning structured { questions[], answers[] } |
+| ✅ | 3. ai suggestions (gemini) | update profile send page to consume ai suggestions with graceful fallback to static |
+| ❌ | 4. data model evolution | create `Folder` and `Thread` schemas; add indexes |
+| ❌ | 4. data model evolution | write migration to move existing `User.messages[]` into `Thread` with one entry per message under `Default` folder |
+| ❌ | 4. data model evolution | implement `GET/POST` apis for folders and threads |
+| ✅ | 5. share qna redesign | create a new `/dashboard/share-qna` rsc-first page with client preview component lazily loaded |
+| ✅ | 5. share qna redesign | add export to image and share; improve typography and themes |
+| ✅ | 6. cleanup | remove compatibility layer and flags; delete unused routes |
