@@ -6,6 +6,7 @@ import ThreadModel from "@/lib/models/thread.schema";
 import mongoose from "mongoose";
 
 import UserModel from "@/lib/models/user.schema";
+import MessageModel from "@/lib/models/message.schema";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -43,24 +44,17 @@ export default async function DashboardPage() {
   const messagesByThreadEntries = await Promise.all(
     ordered.map(async (t) => {
       try {
-        const pipeline: any[] = [
-          { $match: { _id: userId } },
-          { $unwind: "$messages" },
-          { $match: { "messages.threadId": { $exists: true } } },
-          { $lookup: { from: "threads", localField: "messages.threadId", foreignField: "_id", as: "threadRef" } },
-          { $unwind: "$threadRef" },
-          { $match: { "threadRef.slug": t.slug } },
-          { $sort: { "messages.createdAt": -1 } },
-          { $group: { _id: "$_id", messages: { $push: "$messages" } } },
-        ];
-        const result = await UserModel.aggregate(pipeline).exec();
-        const messages = (result?.[0]?.messages || []) as any[];
-        const plain = messages.map((m) => ({
+        const messages = await MessageModel.find({ userId, })
+          .populate({ path: 'threadId', match: { slug: t.slug }, select: '_id slug' })
+          .sort({ createdAt: -1 })
+          .lean();
+        const filtered = messages.filter((m: any) => m.threadId && (m as any).threadId.slug === t.slug);
+        const plain = filtered.map((m: any) => ({
           _id: String(m._id),
           content: String(m.content),
           createdAt: new Date(m.createdAt),
-          threadId: String(m.threadId),
-        })) as any;
+          threadId: String((m.threadId as any)._id),
+        }));
         return [t.slug, plain] as const;
       } catch (error) {
         console.error(`Failed to fetch messages for thread ${t.slug}:`, error);

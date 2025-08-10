@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 import connectToDatabase from "@/lib/connectToDatabase";
-import UserModel from "@/lib/models/user.schema";
 import { getServerSession, type Session } from "next-auth";
 import authOptions from "@/app/api/auth/[...nextauth]/options";
 import ThreadModel from "@/lib/models/thread.schema";
+import UserModel from "@/lib/models/user.schema";
 import { NextRequest } from "next/server";
+import MessageModel from "@/lib/models/message.schema";
 
 interface SessionUser {
   _id: string;
@@ -50,36 +51,33 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const pipeline: any[] = [
-      { $match: { _id: userId } },
-      { $unwind: "$messages" },
-    ];
+    const criteria: any = { userId };
+    if (targetThreadId) criteria.threadId = targetThreadId;
 
-    if (targetThreadId) {
-      pipeline.push({ $match: { "messages.threadId": targetThreadId } });
-    }
+    const messages = await MessageModel.find(criteria)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    pipeline.push(
-      { $sort: { "messages.createdAt": -1 } },
-      { $group: { _id: "$_id", messages: { $push: "$messages" } } }
-    );
-
-    const messages = await UserModel.aggregate(pipeline).exec();
-
-    if (messages.length === 0 || !messages[0]?.messages) {
+    if (messages.length > 0) {
       return Response.json(
-        { message: "No messages yet", success: true, data: [] },
+        { messages, success: true, message: 'OK' },
         { status: 200 }
       );
     }
 
-    return Response.json(
-      {
-        messages: messages[0].messages || [],
-        success: true,
-      },
-      { status: 200 }
+    // Fallback: legacy embedded messages (pre-migration)
+    const pipeline: any[] = [
+      { $match: { _id: userId } },
+      { $unwind: "$messages" },
+    ];
+    if (targetThreadId) pipeline.push({ $match: { "messages.threadId": targetThreadId } });
+    pipeline.push(
+      { $sort: { "messages.createdAt": -1 } },
+      { $group: { _id: "$_id", messages: { $push: "$messages" } } }
     );
+    const legacy = await UserModel.aggregate(pipeline).exec();
+    const legacyMessages = legacy?.[0]?.messages || [];
+    return Response.json({ messages: legacyMessages, success: true, message: 'OK' }, { status: 200 });
   } catch (error: any) {
     console.error("An unexpected error occurred: ", error);
     return Response.json(

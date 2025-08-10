@@ -1,5 +1,5 @@
 import connectToDatabase from '@/lib/connectToDatabase';
-import { Message } from '@/lib/models/message.schema';
+import MessageModel, { Message } from '@/lib/models/message.schema';
 import { findUserByUsernameCI } from "@/lib/userIdentity";
 import ThreadModel from '@/lib/models/thread.schema';
 import mongoose from 'mongoose';
@@ -27,11 +27,13 @@ export async function POST(request: Request) {
             thread = { _id: created._id } as any;
           }
           const threadId = thread?._id as mongoose.Types.ObjectId;
-          const newMessage = { content, createdAt: new Date(), threadId } as Partial<Message>;
+          const newMessage: Partial<Message> = {
+            content,
+            threadId,
+            userId: userId,
+          };
 
-          user.messages.push(newMessage as Message);
-
-          await user.save();
+          await MessageModel.create(newMessage);
 
           return Response.json({ message: 'Message sent successfully', success: true }, { status: 201 });
      }

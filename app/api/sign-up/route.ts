@@ -35,7 +35,6 @@ export async function POST(request: Request) {
                     email,
                     password: hashedPassword,
                     isAcceptingMessages: true,
-                    messages: [],
                });
 
                  await newUser.save();
