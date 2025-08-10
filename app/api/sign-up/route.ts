@@ -1,5 +1,6 @@
 import connectToDatabase from "@/lib/connectToDatabase";
 import UserModel from "@/lib/models/user.schema";
+import { isUsernameTakenCI, findUserByEmailCI } from "@/lib/userIdentity";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
@@ -8,13 +9,13 @@ export async function POST(request: Request) {
      try {
           const { username, email, password } = await request.json();
 
-          const existingUserByUsername = await UserModel.findOne({ username });
+          const usernameTaken = await isUsernameTakenCI(username);
 
-          if (existingUserByUsername) {
+          if (usernameTaken) {
                return Response.json({ success: false, message: "Username is already taken" }, { status: 400 })
           }
 
-          const existingUserByEmail = await UserModel.findOne({ email });
+          const existingUserByEmail = await findUserByEmailCI(email);
 
           if (existingUserByEmail) {
                const hashedPassword = await bcrypt.hash(password, 10).toString();

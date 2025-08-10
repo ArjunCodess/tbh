@@ -1,14 +1,14 @@
-import UserModel from '@/lib/models/user.schema';
 import connectToDatabase from '@/lib/connectToDatabase';
 import { Message } from '@/lib/models/message.schema';
+import { findUserByUsernameCI } from "@/lib/userIdentity";
 
 export async function POST(request: Request) {
      await connectToDatabase();
 
-     const { username, content } = await request.json();
+      const { username, content } = await request.json();
 
      try {
-          const user = await UserModel.findOne({ username }).exec();
+          const user = await findUserByUsernameCI(username);
 
           if (!user) return Response.json({ message: 'User not found', success: false }, { status: 404 });
 

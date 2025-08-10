@@ -1,5 +1,5 @@
 import connectToDatabase from "@/lib/connectToDatabase";
-import UserModel from "@/lib/models/user.schema";
+import { isUsernameTakenCI } from "@/lib/userIdentity";
 import { z } from "zod";
 import { usernameValidation } from "@/lib/schema/signUpSchema";
 
@@ -28,10 +28,8 @@ export async function GET(request: Request) {
           }
 
           const { username } = result.data;
-
-          const existingUserByUsername = await UserModel.findOne({ username });
-
-          if (existingUserByUsername) return Response.json({ success: false, message: 'Username is already taken' }, { status: 400 });
+          const taken = await isUsernameTakenCI(username);
+          if (taken) return Response.json({ success: false, message: 'Username is already taken' }, { status: 400 });
 
           return Response.json({ success: true, message: 'Username is available' });
      }
