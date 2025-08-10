@@ -6,11 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate:backfill-threads": "npx tsx --transpile-only scripts/run-backfill.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.3",
     "@hookform/resolvers": "^3.6.0",
+    "@next/env": "^15.4.6",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
