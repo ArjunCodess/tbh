@@ -63,10 +63,15 @@ export default function MessageCard({
       if (!res.ok) throw new Error(`failed to generate image (${res.status})`);
       const blob = await res.blob();
 
+      const srcDataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("failed to read image data"));
+        reader.readAsDataURL(blob);
+      });
+
       const img = new Image();
-      img.crossOrigin = "anonymous";
-      const objectUrl = URL.createObjectURL(blob);
-      img.src = objectUrl;
+      img.src = srcDataUrl;
 
       await new Promise<void>((resolve, reject) => {
         const onLoad = () => {
@@ -102,7 +107,15 @@ export default function MessageCard({
       const file = new File([outBlob], "tbh-answer.png", { type: "image/png" });
 
       document.body.removeChild(wrapper);
-      URL.revokeObjectURL(objectUrl);
+      
+      const canShareFiles =
+        typeof navigator !== "undefined" &&
+        "canShare" in navigator &&
+        (navigator as any).canShare?.({ files: [file] });
+
+      if (!canShareFiles) {
+        throw new Error("sharing files is not supported on this device");
+      }
 
       await navigator.share({
         title: "Share TBH Answer",
