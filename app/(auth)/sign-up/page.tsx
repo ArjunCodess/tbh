@@ -87,12 +87,12 @@ export default function SignUpFormPage() {
           catch (error: any) {
                const axiosError = error as AxiosError<apiResponse>;
 
-               let errorMessage = axiosError.response?.data.message;
-               ('There was a problem with your sign-up. Please try again.');
+               const errorMessage =
+                 axiosError.response?.data.message ??
+                 axiosError.message ??
+                 'There was a problem with your sign-up. Please try again.';
 
-               toast.error('Sign Up Failed', { description: errorMessage });
-
-               setIsSubmitting(false);
+               toast.error('Sign Up Failed', { description: errorMessage });               setIsSubmitting(false);
           }
      };
 
@@ -154,17 +154,21 @@ export default function SignUpFormPage() {
                                         <FormItem>
                                              <FormLabel>Password</FormLabel>
                                               <div className="relative">
-                                                   <Input type={showPassword ? 'text' : 'password'} {...field} name="password" />
+                                                   <Input
+                                                     type={showPassword ? 'text' : 'password'}
+                                                     autoComplete="new-password"
+                                                     {...field}
+                                                   />
                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword((prev) => !prev)}
-                                                        className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                     type="button"
+                                                     onClick={() => setShowPassword((prev) => !prev)}
+                                                     className="absolute inset-y-0 right-3 flex items-center p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+                                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                     aria-pressed={showPassword}
                                                    >
-                                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                    </button>
-                                              </div>
-                                             <FormMessage />
+                                              </div>                                             <FormMessage />
                                         </FormItem>
                                    )}
                               />

@@ -1,10 +1,11 @@
 import MessageForm from "@/components/MessageForm";
+import type { Metadata } from "next";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ username: string }>;
-}) {
+}): Promise<Metadata> {
   const { username } = await params;
   return {
     title: `Send an anonymous message to @${username}`,

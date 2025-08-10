@@ -5,7 +5,6 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Trash2, Loader2, Share2 } from 'lucide-react'
-import html2canvas from 'html2canvas'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   AlertDialog,
@@ -22,6 +21,7 @@ import { Button } from './ui/button'
 import { toast } from 'sonner'
 import type { Message } from '@/lib/models/message.schema'
 import type { apiResponse } from '@/types/apiResponse'
+import html2canvas from 'html2canvas'
 
 dayjs.extend(relativeTime)
 

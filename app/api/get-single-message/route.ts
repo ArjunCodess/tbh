@@ -13,9 +13,15 @@ export async function GET(request: Request) {
      const session = await getServerSession(authOptions);
      const _user = (session as any)?.user as any;
 
-     if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+     if (!session || !_user || !_user._id) {
+         return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+     }
 
      const userId = new mongoose.Types.ObjectId(_user._id);
+
+     if (!messageId) {
+          return Response.json({ success: false, message: 'Message ID is required' }, { status: 400 });
+     }
 
      try {
           const message = await UserModel.aggregate([
