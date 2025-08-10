@@ -21,12 +21,14 @@ import { useRouter } from 'next/navigation';
 import { signUpSchema } from '@/lib/schema/signUpSchema';
 import { apiResponse } from '@/types/apiResponse';
 import { useDebounce } from "@uidotdev/usehooks";
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignUpFormPage() {
      const [username, setUsername] = useState('');
      const [usernameMessage, setUsernameMessage] = useState('');
      const [isCheckingUsername, setIsCheckingUsername] = useState(false);
      const [isSubmitting, setIsSubmitting] = useState(false);
+     const [showPassword, setShowPassword] = useState(false);
 
      const debouncedUsername = useDebounce(username, 500);
 
@@ -151,7 +153,17 @@ export default function SignUpFormPage() {
                                    render={({ field }) => (
                                         <FormItem>
                                              <FormLabel>Password</FormLabel>
-                                             <Input type="password" {...field} name="password" />
+                                              <div className="relative">
+                                                   <Input type={showPassword ? 'text' : 'password'} {...field} name="password" />
+                                                   <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword((prev) => !prev)}
+                                                        className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
+                                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                   >
+                                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                   </button>
+                                              </div>
                                              <FormMessage />
                                         </FormItem>
                                    )}
