@@ -18,11 +18,21 @@ export default async function DashboardPage() {
     );
   }
 
-  await connectToDatabase();
-  const userId = new mongoose.Types.ObjectId(user._id);
-
-  const foundUser = await UserModel.findById(userId, { isAcceptingMessages: 1 }).lean();
-  const acceptMessages = !!foundUser?.isAcceptingMessages;
+  let acceptMessages = false;
+  let userId: mongoose.Types.ObjectId | null = null;
+  try {
+    await connectToDatabase();
+    userId = new mongoose.Types.ObjectId(user._id);
+    const foundUser = await UserModel.findById(userId, { isAcceptingMessages: 1 }).lean();
+    acceptMessages = !!foundUser?.isAcceptingMessages;
+  } catch (error) {
+    console.error("[DashboardPage] Failed to connect or query database:", error);
+    return (
+      <div className="text-center h-screen flex items-center justify-center">
+        We are experiencing issues connecting to the database. Please try again later.
+      </div>
+    );
+  }
 
   const threadDocs = await ThreadModel.find({ userId }, { title: 1, slug: 1 }, { lean: true }).sort({ createdAt: -1 }).exec();
   const plainThreads = (threadDocs || []).map((t: any) => ({ title: String(t.title), slug: String(t.slug) }));
@@ -32,29 +42,33 @@ export default async function DashboardPage() {
 
   const messagesByThreadEntries = await Promise.all(
     ordered.map(async (t) => {
-      const pipeline: any[] = [
-        { $match: { _id: userId } },
-        { $unwind: "$messages" },
-        { $match: { "messages.threadId": { $exists: true } } },
-        { $lookup: { from: "threads", localField: "messages.threadId", foreignField: "_id", as: "threadRef" } },
-        { $unwind: "$threadRef" },
-        { $match: { "threadRef.slug": t.slug } },
-        { $sort: { "messages.createdAt": -1 } },
-        { $group: { _id: "$_id", messages: { $push: "$messages" } } },
-      ];
-      const result = await UserModel.aggregate(pipeline).exec();
-      const messages = (result?.[0]?.messages || []) as any[];
-      const plain = messages.map((m) => ({
-        _id: String(m._id),
-        content: String(m.content),
-        createdAt: new Date(m.createdAt),
-        threadId: String(m.threadId),
-      })) as any;
-      return [t.slug, plain] as const;
+      try {
+        const pipeline: any[] = [
+          { $match: { _id: userId } },
+          { $unwind: "$messages" },
+          { $match: { "messages.threadId": { $exists: true } } },
+          { $lookup: { from: "threads", localField: "messages.threadId", foreignField: "_id", as: "threadRef" } },
+          { $unwind: "$threadRef" },
+          { $match: { "threadRef.slug": t.slug } },
+          { $sort: { "messages.createdAt": -1 } },
+          { $group: { _id: "$_id", messages: { $push: "$messages" } } },
+        ];
+        const result = await UserModel.aggregate(pipeline).exec();
+        const messages = (result?.[0]?.messages || []) as any[];
+        const plain = messages.map((m) => ({
+          _id: String(m._id),
+          content: String(m.content),
+          createdAt: new Date(m.createdAt),
+          threadId: String(m.threadId),
+        })) as any;
+        return [t.slug, plain] as const;
+      } catch (error) {
+        console.error(`Failed to fetch messages for thread ${t.slug}:`, error);
+        return [t.slug, []] as const;
+      }
     })
   );
   const messagesByThread = Object.fromEntries(messagesByThreadEntries);
-
   return (
     <DashboardClient
       username={String(user.username)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
@@ -59,7 +59,6 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const [copied, setCopied] = useState(false);
   const [acceptMessages, setAcceptMessages] = useState(initialAcceptMessages);
-  const [isSwitchLoading] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [threads, setThreads] = useState<ThreadLite[]>(initialThreads);
   const [messagesByThread, setMessagesByThread] = useState<
@@ -86,9 +85,15 @@ export default function DashboardClient({
   const [selectedThreadSlug, setSelectedThreadSlug] =
     useState<string>(initialSelected);
 
-  const profileUrl = `${
-    typeof window !== "undefined" ? window.location.origin : ""
-  }/profile/${username}?q=${encodeURIComponent(selectedThreadSlug)}`;
+  const [profileUrl, setProfileUrl] = useState("");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = `${window.location.origin}/profile/${username}?q=${encodeURIComponent(
+        selectedThreadSlug
+      )}`;
+      setProfileUrl(url);
+    }
+  }, [username, selectedThreadSlug]);
 
   const fetchThreadsAndMessages = async (showRefreshToast = false) => {
     if (showRefreshToast) setIsRefreshing(true);
@@ -118,7 +123,13 @@ export default function DashboardClient({
               slug: t.slug,
               messages: (r.data.messages || []) as Message[],
             }))
-            .catch(() => ({ slug: t.slug, messages: [] as Message[] }))
+            .catch((error) => {
+              console.error(
+                `Failed to fetch messages for thread ${t.slug}:`,
+                error
+              );
+              return { slug: t.slug, messages: [] as Message[] };
+            })
         )
       );
 
@@ -227,9 +238,8 @@ export default function DashboardClient({
         }));
         setSelectedThreadSlug(created.slug);
       }
-      // also refresh in background to ensure consistency
-      fetchThreadsAndMessages(true);
-    } catch (e: any) {
+
+      await fetchThreadsAndMessages(true);    } catch (e: any) {
       toast.error("Failed to create thread", {
         description: e?.response?.data?.message || e?.message,
       });
@@ -281,13 +291,13 @@ export default function DashboardClient({
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-1">
-              {(isSwitchLoading || isToggling) && (
+              {(isToggling) && (
                 <Loader2 className="h-3 w-3 animate-spin" />
               )}
               <Switch
                 checked={acceptMessages}
                 onCheckedChange={handleSwitchChange}
-                disabled={isSwitchLoading || isToggling}
+                disabled={isToggling}
               />
             </div>
             <Button

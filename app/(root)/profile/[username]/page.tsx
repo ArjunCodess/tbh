@@ -27,7 +27,6 @@ export default async function Page({
 }) {
   const { username } = await params;
   const { q } = (searchParams ? await searchParams : {}) as { q?: string };
-  const selectedThreadSlug = q || 'ama';
   await connectToDatabase();
   const user = await findUserByUsernameCI(username);
   let threads: { title: string; slug: string }[] = [];
@@ -50,6 +49,11 @@ export default async function Page({
   } else {
     threads = [{ title: "ask me anything", slug: "ama" }];
   }
+  const selectedThreadSlug =
+    (q && threads.some(t => t.slug === q) ? q : undefined) ??
+    threads.find(t => t.slug === 'ama')?.slug ??
+    threads[0]?.slug ??
+    'ama';
 
   return (
     <main className="min-h-[calc(100dvh-0px)] w-full px-4 py-6 md:py-10">

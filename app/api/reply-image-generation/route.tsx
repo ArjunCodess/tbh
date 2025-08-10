@@ -62,7 +62,7 @@ export async function GET(request: Request) {
                 emoji: 'noto',
                 fonts: [
                     {
-                        name: 'Bricolage Grotesque',
+                        name: 'BricolageGrotesque',
                         data: fontData,
                         style: 'normal',
                     },
@@ -71,7 +71,8 @@ export async function GET(request: Request) {
         )
     }
 
-    catch (error: any) {
-        console.log(error);
+    catch (error: unknown) {
+        console.error('[OG] Failed to generate image', error);
+        return new Response('Failed to generate image', { status: 500 });
     }
 }
