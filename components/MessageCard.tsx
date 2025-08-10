@@ -101,7 +101,7 @@ export default function MessageCard({ message, onMessageDelete }: MessageCardPro
 
   return (
     <Card className="hover:shadow-lg transition-all duration-200">
-      <CardContent className="p-4">
+      <CardContent>
         <div className="space-y-3">
           <p className="text-balance font-medium text-lg leading-relaxed line-clamp-4 break-words whitespace-pre-wrap">
             {message.content}

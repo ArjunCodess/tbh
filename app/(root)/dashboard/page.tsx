@@ -227,7 +227,7 @@ export default function DashboardPage() {
 
         {/* Profile Link */}
         <Card>
-          <CardContent className="p-4">
+          <CardContent>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
@@ -272,7 +272,7 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i}>
-                <CardContent className="p-4">
+                <CardContent>
                   <div className="space-y-3">
                     <div className="h-5 bg-muted rounded animate-pulse" />
                     <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
