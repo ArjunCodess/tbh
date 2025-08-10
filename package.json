@@ -6,8 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "migrate:backfill-threads": "npx tsx --transpile-only scripts/run-backfill.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.3",

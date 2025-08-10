@@ -5,18 +5,37 @@ export interface Thread extends Document {
   title: string;
   slug: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-const ThreadSchema: Schema<Thread> = new mongoose.Schema({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  title: { type: String, required: true, trim: true },
-  slug: { type: String, required: true, trim: true },
-  createdAt: { type: Date, required: true, default: Date.now },
+const ThreadSchema: Schema<Thread> = new mongoose.Schema(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    title: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, trim: true },
+  },
+  { timestamps: true }
+);
+
+ThreadSchema.pre("save", function (next) {
+  if (this.isModified("slug") && typeof (this as any).slug === "string") {
+    (this as any).slug = (this as any).slug
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+  next();
 });
 
-// per-user uniqueness for slug
 ThreadSchema.index({ userId: 1, slug: 1 }, { unique: true });
-// display ordering helper: user + createdAt desc
 ThreadSchema.index({ userId: 1, createdAt: -1 });
 
 const ThreadModel =
