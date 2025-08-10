@@ -485,14 +485,12 @@ export default function DashboardClient({
                       height={32}
                     />
                   )}
-                  <div className="flex flex-row items-center gap-4">
-                    <h2 className="text-2xl font-bold w-full text-left">
-                      {t.title}
-                    </h2>
-                    <Badge className="size-6 min-w-0 min-h-0 p-0 flex items-center justify-center rounded-full text-sm">
+                  <h2 className="text-base md:text-lg lg:text-xl font-bold text-left flex flex-row items-center text-balance">
+                    {t.title}
+                    <Badge className="size-6 min-w-0 min-h-0 m-2 p-2 flex items-center justify-center rounded-full text-sm">
                       {!isLoading && `${list.length}`}
                     </Badge>
-                  </div>
+                  </h2>
                 </button>
                 {t.slug !== "ama" && (
                   <AlertDialog>
