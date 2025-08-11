@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSession, signOut } from "next-auth/react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Settings } from "lucide-react";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -54,6 +54,12 @@ export default function Navbar() {
                 <Link href="/dashboard">
                   <UserIcon className="mr-2 h-4 w-4" />
                   Dashboard
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
