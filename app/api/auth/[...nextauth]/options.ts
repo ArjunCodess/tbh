@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import connectToDatabase from "@/lib/connectToDatabase";
 import UserModel from "@/lib/models/user.schema";
+import { ensureDailyPromptFreshForUserId } from "@/lib/services/dailyPrompt";
 
 const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -62,6 +63,18 @@ const authOptions: NextAuthOptions = {
         isAcceptingMessages: (token as any).isAcceptingMessages,
       };
       return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      try {
+        const userId = (user as any)?._id || (user as any)?.id;
+        if (!userId) return;
+        await connectToDatabase();
+        await ensureDailyPromptFreshForUserId(String(userId));
+      } catch (err) {
+        console.error("[events.signIn] failed to refresh daily prompt", err);
+      }
     },
   },
   pages: {

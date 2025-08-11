@@ -5,6 +5,11 @@ export interface User extends Document {
   email: string;
   password: string;
   isAcceptingMessages: boolean;
+  dailyPrompt?: {
+    text: string;
+    updatedAt: Date | null;
+    promptVersion: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,9 +30,16 @@ const UserSchema: Schema<User> = new mongoose.Schema(
     },
     password: { type: String, required: [true, 'Password is required'] },
     isAcceptingMessages: { type: Boolean, default: true },
+    dailyPrompt: {
+      text: { type: String, default: '' },
+      updatedAt: { type: Date, default: null },
+      promptVersion: { type: Number, default: 1 },
+    },
   },
   { timestamps: true }
 );
+
+UserSchema.index({ 'dailyPrompt.updatedAt': -1 });
 
 const UserModel =
   (mongoose.models.User as mongoose.Model<User>) ||
