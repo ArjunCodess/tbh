@@ -39,7 +39,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="w-full border-b border-neutral-200 bg-neutral-950">
+    <header className="w-full border-b border-neutral-800 bg-neutral-950">
       <div className="container mx-auto px-3 sm:px-4 flex h-14 sm:h-16 items-center justify-between">
         <Link
           href="/"

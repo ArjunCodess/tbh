@@ -4,7 +4,7 @@ import React from 'react'
 
 export default function Footer() {
     return (
-        <footer className='p-8 bg-neutral-900 text-neutral-300'>
+        <footer className='py-14 bg-neutral-900 text-neutral-300 border-neutral-800 border-t'>
             <div className="container mx-auto px-4 lg:px-6 flex flex-col lg:flex-row items-center justify-between">
                 <div className="flex flex-col lg:max-w-xl">
                     <Image src='/tbh.png' width={100} height={100} alt="TBH Logo" />
