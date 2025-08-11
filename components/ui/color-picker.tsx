@@ -1,4 +1,5 @@
 "use client";
+
 import Color from "color";
 import { PipetteIcon } from "lucide-react";
 import { Slider } from "radix-ui";
@@ -60,7 +61,6 @@ export const ColorPicker = ({
   const [mode, setMode] = useState("hex");
   const lastIncomingHexRef = useRef<string | null>(null);
   const skipNextEmitRef = useRef(false);
-  // Update color when controlled value changes
   useEffect(() => {
     const incoming = value ?? defaultValue;
     try {
@@ -116,9 +116,27 @@ export const ColorPickerSelection = memo(
   ({ className, ...props }: ColorPickerSelectionProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [positionX, setPositionX] = useState(0);
-    const [positionY, setPositionY] = useState(0);
-    const { hue, setSaturation, setLightness } = useColorPicker();
+    const { hue, saturation, lightness, setSaturation, setLightness } = useColorPicker();
+
+    // calculate pointer position from saturation and lightness
+    const getPointerPosition = useCallback(() => {
+      // x: saturation (0-100) -> 0-1
+      const x = Math.max(0, Math.min(1, saturation / 100));
+      // y: lightness mapping
+      // reverse the calculation in handlePointerMove
+      // topLightness = x < 0.01 ? 100 : 50 + 50 * (1 - x)
+      // lightness = topLightness * (1 - y)
+      // so: y = 1 - (lightness / topLightness)
+      const topLightness = x < 0.01 ? 100 : 50 + 50 * (1 - x);
+      const y = 1 - (lightness / topLightness);
+      return {
+        x,
+        y: Math.max(0, Math.min(1, y)),
+      };
+    }, [lightness]);
+
+    const pointer = getPointerPosition();
+
     const backgroundGradient = useMemo(() => {
       return `linear-gradient(0deg, rgba(0,0,0,1), rgba(0,0,0,0)),
             linear-gradient(90deg, rgba(255,255,255,1), rgba(255,255,255,0)),
@@ -138,8 +156,6 @@ export const ColorPickerSelection = memo(
           0,
           Math.min(1, (event.clientY - rect.top) / rect.height)
         );
-        setPositionX(x);
-        setPositionY(y);
         setSaturation(x * 100);
         const topLightness = x < 0.01 ? 100 : 50 + 50 * (1 - x);
         const lightness = topLightness * (1 - y);
@@ -175,8 +191,8 @@ export const ColorPickerSelection = memo(
         <div
           className="-translate-x-1/2 -translate-y-1/2 pointer-events-none absolute h-4 w-4 rounded-full border-2 border-white"
           style={{
-            left: `${positionX * 100}%`,
-            top: `${positionY * 100}%`,
+            left: `${pointer.x * 100}%`,
+            top: `${pointer.y * 100}%`,
             boxShadow: "0 0 0 1px rgba(0,0,0,0.5)",
           }}
         />
