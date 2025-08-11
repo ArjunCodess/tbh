@@ -88,7 +88,7 @@ export default function DashboardClient({
   const [profileUrl, setProfileUrl] = useState("");
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const url = `${window.location.origin}/profile/${username}?q=${encodeURIComponent(
+      const url = `${window.location.origin}/u/${username}?q=${encodeURIComponent(
         selectedThreadSlug
       )}`;
       setProfileUrl(url);

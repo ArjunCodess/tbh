@@ -34,7 +34,7 @@
 ### acceptance criteria
 
 - next.js 15 app builds, runs, and pages render
-- ai suggestions visible on `/profile/[username]` with fallback when disabled
+- ai suggestions visible on `/u/[username]` with fallback when disabled
 - thread view supports multiple q&a entries under a conversation
 - share qna page is redesigned and can export/share images cleanly
 

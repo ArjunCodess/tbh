@@ -52,7 +52,7 @@ inspired by ngl “games”, we will let users pick a thread (default: "ask me a
 
 ### phase 4 — profile ui
 
-- `app/(root)/profile/[username]/page.tsx`
+- `app/(root)/u/[username]/page.tsx`
   - add a dropdown to pick the thread; default selection = "ask me anything"
   - pass the selected thread along to `MessageForm` (and ultimately to `POST /api/send-message`)
   - server-render threads list for the profile user; the dropdown itself can be a tiny client component wrapped in `Suspense`

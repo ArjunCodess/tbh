@@ -42,7 +42,7 @@
   - `app/(root)/dashboard/message/[messageId]/page.tsx`: view a single message, generate sharable image, share via web share api
   - `app/(root)/dashboard/share-qna/page.tsx`: share-qna image prompt ui (current design is basic)
 - **public profile**
-  - `app/(root)/profile/[username]/page.tsx`: send anonymous message to a user; includes suggested message buttons
+  - `app/(root)/u/[username]/page.tsx`: send anonymous message to a user; includes suggested message buttons
 
 ### api routes
 
@@ -59,7 +59,7 @@
 
 ### notable flows
 
-- **send anonymous message**: visitor opens `/profile/[username]` → composes message or taps a suggested message → `POST /api/send-message`
+- **send anonymous message**: visitor opens `/u/[username]` → composes message or taps a suggested message → `POST /api/send-message`
 - **manage inbox**: signed-in user opens `/dashboard` → toggles accept messages → views/deletes messages → opens message detail for sharing
 - **share to story**: on `/dashboard/message/[messageId]` → generates an image via `/api/reply-image-generation` → shares via web share api
 
