@@ -259,15 +259,33 @@ export const ColorPickerEyeDropper = ({
 
 export type ColorPickerOutputProps = ComponentProps<typeof Input>;
 export const ColorPickerOutput = ({ ...props }: ColorPickerOutputProps) => {
-  const { hue, saturation, lightness } = useColorPicker();
-  const color = Color.hsl(hue, saturation, lightness);
-  const hex = color.hex();
+  const { hue, saturation, lightness, setHue, setSaturation, setLightness } = useColorPicker();
+  const [inputValue, setInputValue] = useState(() => Color.hsl(hue, saturation, lightness).hex());
+
+  useEffect(() => {
+    setInputValue(Color.hsl(hue, saturation, lightness).hex());
+  }, [hue, saturation, lightness]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    try {
+      const color = Color(val);
+      const hsl = color.hsl().array();
+      setHue(Number(hsl[0]) || 0);
+      setSaturation(Number(hsl[1]) || 0);
+      setLightness(Number(hsl[2]) || 0);
+    } catch {
+      // ignore invalid input
+    }
+  };
+
   return (
     <Input
       className="h-8 w-full px-2 text-xs shadow-none"
-      readOnly
       type="text"
-      value={hex}
+      value={inputValue}
+      onChange={handleChange}
       {...props}
     />
   );
