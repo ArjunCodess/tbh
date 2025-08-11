@@ -1,40 +1,69 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSession, signOut } from "next-auth/react";
-import { ArrowRight, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <header className="w-full border-b border-neutral-200 bg-card">
+        <div className="container mx-auto px-3 sm:px-4 flex h-14 sm:h-16 items-center justify-between">
+          <Link href="/" className="font-bold text-lg sm:text-xl">
+            TBH
+          </Link>
+          <div className="h-8 w-8 rounded-full bg-neutral-200"></div>
+        </div>
+      </header>
+    );
+  }
 
   return (
-    <header>
-      <nav className="flex h-16 items-center justify-between bg-neutral-950 px-4 md:px-6">
+    <header className="w-full border-b border-neutral-200 bg-neutral-950">
+      <div className="container mx-auto px-3 sm:px-4 flex h-14 sm:h-16 items-center justify-between">
         <Link
           href="/"
-          className="text-xl md:text-2xl font-bold text-white"
-          prefetch={false}
+          className="text-xl md:text-2xl font-bold flex items-center gap-2"
         >
-          TBH
+          <span className="sr-only">TBH</span>
+          <Image src="/tbh.png" alt="TBH" width={58} height={32} priority />
         </Link>
 
-        {session?.user ? (
+        {status === "loading" ? (
+          <div className="h-8 w-8 rounded-full bg-neutral-200 animate-pulse"></div>
+        ) : user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>
+              <Button
+                variant="ghost"
+                className="relative h-8 w-8 rounded-full p-0"
+              >
+                <Avatar className="h-8 w-8 rounded-full">
+                  <AvatarImage
+                    src={(user as any)?.image || ""}
+                    alt={user?.name || "User"}
+                  />
+                  <AvatarFallback className="bg-neutral-100 text-neutral-800">
                     {user?.username?.charAt(0)?.toUpperCase() ||
                       user?.email?.charAt(0)?.toUpperCase() ||
                       "U"}
@@ -52,7 +81,7 @@ export default function Navbar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/dashboard">
-                  <UserIcon className="mr-2 h-4 w-4" />
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
                   Dashboard
                 </Link>
               </DropdownMenuItem>
@@ -64,65 +93,25 @@ export default function Navbar() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={async (e) => {
-                  e.preventDefault();
-                  await signOut({ callbackUrl: "/sign-in" });
-                }}
+                onClick={() => signOut({ callbackUrl: "/sign-in" })}
               >
-                <LogOutIcon className="mr-2 h-4 w-4" />
+                <LogOut className="mr-2 h-4 w-4" />
                 Logout
-              </DropdownMenuItem>{" "}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button className="text-sm md:text-base bg-linear-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full h-10 px-4 py-2 text-white">
-            <Link href={"/sign-up"}>
-              Create an account <ArrowRight className="w-5 h-5 inline" />
+          <Button
+            asChild
+            variant="default"
+            className="px-2 sm:px-4 text-sm h-8 sm:h-9 rounded-full"
+          >
+            <Link href="/sign-up">
+              Create an account <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
         )}
-      </nav>
+      </div>
     </header>
-  );
-}
-
-function LogOutIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" x2="9" y1="12" y2="12" />
-    </svg>
-  );
-}
-
-function UserIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
   );
 }
