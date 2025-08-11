@@ -150,7 +150,7 @@ export default function ProfileSettingsPage() {
   }, [displayName, username, profileColor, textColor, originalUsername]);
 
   return (
-    <main className="min-h-[calc(100dvh-0px)] w-full px-4 py-8 md:py-12">
+    <main className="min-h-[calc(100vh-60px)] w-full px-4 py-8 md:py-12">
       <div className="mx-auto w-full max-w-3xl">
         <section className="rounded-2xl border bg-card text-card-foreground shadow-sm">
           <div className="space-y-8 p-6 md:p-10">

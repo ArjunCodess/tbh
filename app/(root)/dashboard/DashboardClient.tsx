@@ -321,7 +321,7 @@ export default function DashboardClient({
     };
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-10 min-h-screen max-w-6xl">
+    <div className="container mx-auto px-4 py-8 md:py-10 min-h-[calc(100vh-60px)] max-w-6xl">
       <div className="mb-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-4">
           <h1 className="text-4xl font-bold">Dashboard</h1>

@@ -47,7 +47,7 @@ export default function SignInFormPage() {
       };
 
      return (
-          <div className="flex justify-center items-center min-h-screen sm:bg-neutral-900">
+          <div className="flex justify-center items-center min-h-[calc(100vh-60px)] sm:bg-neutral-900">
                <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg sm:shadow-md">
                     <div className="text-center">
                          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">Welcome!</h1>
