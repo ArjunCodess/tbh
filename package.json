@@ -29,6 +29,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "color": "^5.0.0",
     "dayjs": "^1.11.11",
     "framer-motion": "^11.3.24",
     "html-to-image": "^1.11.13",
@@ -39,6 +40,7 @@
     "next-auth": "^4.24.7",
     "next-themes": "^0.4.6",
     "puppeteer": "^23.0.2",
+    "radix-ui": "^1.4.2",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "react-hook-form": "^7.51.5",
@@ -52,6 +54,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "@types/bcryptjs": "^2.4.6",
+    "@types/color": "^4.2.0",
     "@types/node": "^20",
     "@types/react": "19.1.9",
     "@types/react-dom": "19.1.7",
