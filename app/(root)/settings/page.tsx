@@ -1,4 +1,5 @@
 "use client";
+
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,15 +20,23 @@ function ColorField({
   onChange,
 }: {
   label: string;
-  value: string;
+  value: string | null;
   onChange: (hex: string) => void;
 }) {
+  if (!value) {
+    return (
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="mb-2 text-sm font-medium">{label}</div>
+        <div className="h-24 w-full animate-pulse rounded-md bg-muted" />
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl border bg-card p-4 shadow-sm">
       <div className="mb-2 text-sm font-medium">{label}</div>
       <ColorPicker
         className="flex w-full flex-col gap-3"
-        value={value || "#000000"}
+        value={value}
         onChange={(rgba) => {
           const [r, g, b] = rgba as any;
           const hex = `#${[r, g, b]
@@ -56,8 +65,8 @@ function ColorField({
 export default function ProfileSettingsPage() {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
-  const [profileColor, setProfileColor] = useState("#111827");
-  const [textColor, setTextColor] = useState("#FFFFFF");
+  const [profileColor, setProfileColor] = useState<string | null>(null);
+  const [textColor, setTextColor] = useState<string | null>(null);
   const [usernameCheck, setUsernameCheck] = useState<
     "Idle" | "Checking" | "Available" | "Taken" | "Invalid" | "Unchanged"
   >("Idle");
@@ -79,10 +88,8 @@ export default function ProfileSettingsPage() {
         setOriginalUsername(
           typeof u.username === "string" ? u.username.toLowerCase() : ""
         );
-        setProfileColor(
-          typeof u.profileColor === "string" ? u.profileColor : "#111827"
-        );
-        setTextColor(typeof u.textColor === "string" ? u.textColor : "#FFFFFF");
+        setProfileColor(typeof u.profileColor === "string" ? u.profileColor : null);
+        setTextColor(typeof u.textColor === "string" ? u.textColor : null);
       })
       .catch(() => {});
   }, []);
@@ -123,8 +130,8 @@ export default function ProfileSettingsPage() {
     const payload: any = {
       displayName,
       username: username.trim().toLowerCase(),
-      profileColor,
-      textColor,
+      ...(profileColor ? { profileColor } : {}),
+      ...(textColor ? { textColor } : {}),
     };
     const res = await fetch("/api/profile", {
       method: "PATCH",
