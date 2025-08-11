@@ -47,6 +47,7 @@ type ThreadLite = { _id?: string; title: string; slug: string };
 type DashboardClientProps = {
   username: string;
   initialAcceptMessages: boolean;
+  dailyPrompt: string;
   initialThreads: ThreadLite[];
   initialMessagesByThread: Record<string, Message[]>;
 };
@@ -54,6 +55,7 @@ type DashboardClientProps = {
 export default function DashboardClient({
   username,
   initialAcceptMessages,
+  dailyPrompt,
   initialThreads,
   initialMessagesByThread,
 }: DashboardClientProps) {
@@ -73,6 +75,7 @@ export default function DashboardClient({
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [isDeletingSlug, setIsDeletingSlug] = useState<string | null>(null);
   const [newThreadTitle, setNewThreadTitle] = useState("");
+  const [isCreatingFromPrompt, setIsCreatingFromPrompt] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const t of initialThreads) initial[t.slug] = t.slug === "ama";
@@ -248,6 +251,39 @@ export default function DashboardClient({
     }
   };
 
+  const handleCreateThreadFromPrompt = async () => {
+    const title = (dailyPrompt || "").trim();
+    if (!title || isCreatingFromPrompt) return;
+    try {
+      setIsCreatingFromPrompt(true);
+      const res = await axios.post("/api/threads", { title });
+      const created = (res.data?.thread || null) as ThreadLite | null;
+      if (created && created.slug) {
+        setThreads((prev) => {
+          const exists = prev.some((t) => t.slug === created.slug);
+          const ama = prev.find((t) => t.slug === "ama");
+          const others = prev.filter(
+            (t) => t.slug !== "ama" && t.slug !== created.slug
+          );
+          const ordered = [...(ama ? [ama] : []), ...others, created];
+          return exists ? prev : ordered;
+        });
+        setMessagesByThread((prev) => ({
+          ...prev,
+          [created.slug]: prev[created.slug] || [],
+        }));
+        setSelectedThreadSlug(created.slug);
+        toast.success("Thread created from daily prompt");
+      }
+    } catch (e: any) {
+      toast.error("Failed to create thread", {
+        description: e?.response?.data?.message || e?.message,
+      });
+    } finally {
+      setIsCreatingFromPrompt(false);
+    }
+  };
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(profileUrl);
@@ -420,6 +456,32 @@ export default function DashboardClient({
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mb-6">
+        <Card>
+          <CardContent>
+            <div className="flex flex-col md:flex-row text-center items-center justify-between gap-3">
+              <Badge className="uppercase text-sm">Daily Prompt</Badge>
+              <p className="text-base leading-relaxed">{dailyPrompt}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!dailyPrompt || isCreatingFromPrompt}
+                onClick={handleCreateThreadFromPrompt}
+              >
+                {isCreatingFromPrompt ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating…
+                  </>
+                ) : (
+                  "Create Thread"
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>

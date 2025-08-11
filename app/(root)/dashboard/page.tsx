@@ -6,6 +6,7 @@ import ThreadModel from "@/lib/models/thread.schema";
 import mongoose from "mongoose";
 
 import UserModel from "@/lib/models/user.schema";
+import { ensureDailyPromptFreshForUserId } from "@/lib/services/dailyPrompt";
 import MessageModel from "@/lib/models/message.schema";
 
 export default async function DashboardPage() {
@@ -20,12 +21,14 @@ export default async function DashboardPage() {
   }
 
   let acceptMessages = false;
+  let dailyPromptText: string | null = null;
   let userId: mongoose.Types.ObjectId | null = null;
   try {
     await connectToDatabase();
     userId = new mongoose.Types.ObjectId(user._id);
     const foundUser = await UserModel.findById(userId, { isAcceptingMessages: 1 }).lean();
     acceptMessages = !!foundUser?.isAcceptingMessages;
+    dailyPromptText = await ensureDailyPromptFreshForUserId(String(user._id));
   } catch (error) {
     console.error("[DashboardPage] Failed to connect or query database:", error);
     return (
@@ -67,6 +70,7 @@ export default async function DashboardPage() {
     <DashboardClient
       username={String(user.username)}
       initialAcceptMessages={acceptMessages}
+      dailyPrompt={dailyPromptText || ""}
       initialThreads={ordered}
       initialMessagesByThread={messagesByThread}
     />
