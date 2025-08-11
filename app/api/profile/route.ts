@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import authOptions from "@/app/api/auth/[...nextauth]/options";
 import connectToDatabase from "@/lib/connectToDatabase";
 import UserModel from "@/lib/models/user.schema";
-import UsernameRedirectModel from "@/lib/models/usernameRedirect.schema";
 import { profileCustomisationsSchema } from "@/lib/schema/profileCustomisations";
 
 const RESERVED = new Set([
@@ -69,11 +68,6 @@ export async function PATCH(req: Request) {
           { status: 409 }
         );
       update.username = next;
-      await UsernameRedirectModel.updateOne(
-        { oldUsername: String(current.username).toLowerCase() },
-        { $set: { newUsername: next, userId } },
-        { upsert: true }
-      );
     }
   }
 

@@ -96,7 +96,7 @@ export const profileCustomisationsSchema = z.object({
 
 We need two migrations:
 1) backfill new fields with defaults for all existing users
-2) enforce case-insensitive username uniqueness and sanitize/normalize usernames
+2) enforce case-insensitive username uniqueness only
 
 #### 1) backfill profile colors + display name
 
@@ -147,34 +147,12 @@ Goals:
 - recreate unique index with case-insensitive collation
 - record redirects from old usernames to the final username
 
-New collection: `username_redirects`
-
-```ts
-// Simple mongoose model suggestion
-// lib/models/usernameRedirect.schema.ts
-import mongoose, { Schema, Document } from 'mongoose';
-export interface UsernameRedirect extends Document {
-  oldUsername: string; // stored lowercase
-  newUsername: string; // stored lowercase
-  userId: mongoose.Types.ObjectId;
-  updatedAt: Date;
-}
-const schema = new Schema<UsernameRedirect>({
-  oldUsername: { type: String, required: true, unique: true },
-  newUsername: { type: String, required: true },
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-}, { timestamps: { createdAt: false, updatedAt: true }, collation: { locale: 'en', strength: 2 } });
-schema.index({ oldUsername: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
-export default mongoose.models.UsernameRedirect || mongoose.model('UsernameRedirect', schema);
-```
-
 Migration script: `scripts/run-migrate-usernames.ts`
 
 ```ts
 import 'dotenv/config';
 import connectToDatabase from '@/lib/connectToDatabase';
 import UserModel from '@/lib/models/user.schema';
-import UsernameRedirect from '@/lib/models/usernameRedirect.schema';
 import mongoose from 'mongoose';
 
 function normalize(u: string) {
@@ -200,43 +178,6 @@ async function recreateUsernameIndex() {
     { unique: true, collation: { locale: 'en', strength: 2 }, name: 'username_1' }
   );
 }
-
-async function main() {
-  await connectToDatabase();
-
-  // snapshot current usernames
-  const users = await UserModel.find({}, { _id: 1, username: 1 }).lean();
-  const taken = new Set<string>(users.map(u => (u.username || '').toLowerCase()));
-
-  for (const u of users) {
-    const current = String(u.username || '');
-    const normalized = normalize(current);
-    if (!normalized) continue;
-    const target = await ensureUnique(normalized, taken);
-    if (target !== current.toLowerCase()) {
-      await UsernameRedirect.updateOne(
-        { oldUsername: current.toLowerCase() },
-        { $set: { newUsername: target, userId: new mongoose.Types.ObjectId(String(u._id)) } },
-        { upsert: true }
-      );
-      await UserModel.updateOne({ _id: u._id }, { $set: { username: target } });
-      taken.add(target);
-    }
-  }
-
-  await recreateUsernameIndex();
-  console.log('username normalization complete.');
-  process.exit(0);
-}
-
-main().catch((e) => { console.error(e); process.exit(1); });
-```
-
-CLI:
-
-```sh
-pnpm ts-node scripts/run-migrate-usernames.ts
-```
 
 ### api endpoints
 

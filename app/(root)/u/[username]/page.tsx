@@ -5,8 +5,6 @@ import { Suspense } from "react";
 import connectToDatabase from "@/lib/connectToDatabase";
 import { findUserByUsernameCI } from "@/lib/userIdentity";
 import ThreadModel from "@/lib/models/thread.schema";
-import UsernameRedirectModel from "@/lib/models/usernameRedirect.schema";
-import { redirect } from "next/navigation";
 
 export async function generateMetadata({
   params,
@@ -32,12 +30,6 @@ export default async function Page({
   await connectToDatabase();
   const user = await findUserByUsernameCI(username);
   let threads: { title: string; slug: string }[] = [];
-  if (!user?._id) {
-    const mapping = await UsernameRedirectModel.findOne({ oldUsername: username.toLowerCase() }).collation({ locale: 'en', strength: 2 }).lean();
-    if (mapping?.newUsername) {
-      redirect(`/u/${mapping.newUsername}`);
-    }
-  }
   if (user?._id) {
     const items = await ThreadModel.find(
       { userId: user._id },
