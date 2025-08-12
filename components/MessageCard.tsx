@@ -29,15 +29,19 @@ type MessageCardProps = {
   message: Message;
   onMessageDelete: (messageId: string) => void;
   threadTitle?: string;
+  globalFilter?: 'unreplied' | 'replied' | 'all';
+  onMessageMarked?: (id: string, next: boolean) => void;
 };
 
 export default function MessageCard({
   message,
   onMessageDelete,
   threadTitle,
+  onMessageMarked,
 }: MessageCardProps) {
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isSharing, setIsSharing] = React.useState(false);
+  const [isToggling, setIsToggling] = React.useState(false);
 
   const handleDeleteConfirm = async () => {
     try {
@@ -123,6 +127,16 @@ export default function MessageCard({
         text: message.content,
         files: [file],
       });
+      // auto-mark as replied on successful share
+      try {
+        setIsToggling(true);
+        await axios.post(`/api/messages/${message._id}/mark-replied`);
+        onMessageMarked?.(message._id as string, true);
+      } catch {
+        // ignore
+      } finally {
+        setIsToggling(false);
+      }
     } catch (err) {
       toast.error("Unable to share", {
         description:
@@ -130,6 +144,24 @@ export default function MessageCard({
       });
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const toggleReplied = async () => {
+    if (isToggling) return;
+    try {
+      setIsToggling(true);
+      const next = !(message as any).isReplied;
+      const url = next
+        ? `/api/messages/${message._id}/mark-replied`
+        : `/api/messages/${message._id}/mark-unreplied`;
+      await axios.post(url);
+      onMessageMarked?.(message._id as string, next);
+      toast.success(next ? 'Marked replied' : 'Marked unreplied');
+    } catch {
+      toast.error('Failed to update');
+    } finally {
+      setIsToggling(false);
     }
   };
 
@@ -162,6 +194,20 @@ export default function MessageCard({
                 <Share2 className="h-4 w-4 mr-2" />
               )}
               {isSharing ? "Sharing…" : "Share to Story"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={toggleReplied}
+              disabled={isToggling}
+              className="flex-1 text-sm"
+            >
+              {isToggling ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {(message as any).isReplied ? 'Unreplied' : 'Replied'}
             </Button>
 
             <AlertDialog>
