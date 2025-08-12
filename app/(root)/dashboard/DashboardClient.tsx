@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
 import {
   DropdownMenu,
@@ -500,30 +500,6 @@ export default function DashboardClient({
         </Card>
       </div>
 
-      <Separator className="mb-6" />
-
-      <div className="mb-4 flex items-center justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setFilter("unreplied")}>
-              Unreplied
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilter("replied")}>
-              Replied
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilter("all")}>
-              All
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       {/* Messages grouped by thread */}
       <div className="space-y-8">
         {isThreadsLoading && (
@@ -557,178 +533,209 @@ export default function DashboardClient({
           </Card>
         )}
 
-        {threads.map((t) => {
-          const list = messagesByThread[t.slug] || [];
-          const isLoading = !!loadingThreads[t.slug];
-          const visibleMessages = list.filter((m) => {
-            if (filter === "all") return true;
-            return filter === "replied"
-              ? (m as any).isReplied
-              : !(m as any).isReplied;
-          });
-          return (
-            <div
-              key={t.slug}
-              className="w-full space-y-3 border-b border-gray-200 pb-6 mb-6 last:border-b-0"
-            >
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="flex items-center gap-3 group w-full"
-                  onClick={() =>
-                    setExpanded((prev) => ({
-                      ...prev,
-                      [t.slug]: !(prev[t.slug] ?? true),
-                    }))
-                  }
-                  aria-expanded={expanded[t.slug] ?? true}
-                >
-                  {expanded[t.slug] ?? true ? (
-                    <Image
-                      src="/folder-open.svg"
-                      alt="folder open"
-                      className="h-8 w-8"
-                      width={32}
-                      height={32}
-                    />
-                  ) : (
-                    <Image
-                      src="/folder-closed.svg"
-                      alt="folder closed"
-                      className="h-8 w-8 opacity-90"
-                      width={32}
-                      height={32}
-                    />
-                  )}
-                  <h2 className="text-base md:text-lg lg:text-xl font-bold text-left flex flex-row items-center text-balance">
-                    {t.title}
-                    <Badge className="size-6 min-w-0 min-h-0 m-2 p-2 flex items-center justify-center rounded-full text-sm">
-                      {isLoading ? "" : `${(t as any).count ?? list.length}`}
-                    </Badge>
-                  </h2>
-                </button>
-                <div className="flex items-center gap-2">
-                  {t.slug !== "ama" && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="icon">
-                          {isDeletingSlug === t.slug ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Delete this thread?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete the thread and its
-                            grouping messages.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={async () => {
-                              try {
-                                setIsDeletingSlug(t.slug);
-                                await axios.delete("/api/threads", {
-                                  data: { slug: t.slug },
-                                });
-                                setThreads((prev) =>
-                                  prev.filter((x) => x.slug !== t.slug)
-                                );
-                                setMessagesByThread((prev) => {
-                                  const copy = { ...prev } as any;
-                                  delete copy[t.slug];
-                                  return copy;
-                                });
-                                toast.success("Thread deleted");
-                              } catch (e: any) {
-                                toast.error("Failed to delete thread", {
-                                  description:
-                                    e?.response?.data?.message || e?.message,
-                                });
-                              } finally {
-                                setIsDeletingSlug(null);
-                              }
-                            }}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </div>
-              </div>
-              {(expanded[t.slug] ?? true) &&
-                (isLoading ? (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <Card key={i}>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="h-5 bg-muted rounded animate-pulse" />
-                            <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
-                            <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
-                            <div className="flex gap-2 pt-2">
-                              <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
-                              <div className="h-9 w-12 bg-muted rounded animate-pulse" />
-                            </div>
-                          </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <h3 className="text-2xl font-semibold">Threads</h3>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Filter className="h-4 w-4 mr-2" />
+                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setFilter("unreplied")}>
+                  Unreplied
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("replied")}>
+                  Replied
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter("all")}>
+                  All
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {threads.map((t, i) => {
+              const list = messagesByThread[t.slug] || [];
+              const isLoading = !!loadingThreads[t.slug];
+              const visibleMessages = list.filter((m) => {
+                if (filter === "all") return true;
+                return filter === "replied"
+                  ? (m as any).isReplied
+                  : !(m as any).isReplied;
+              });
+              return (
+                <div key={t.slug} className="w-full space-y-3 border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 group w-full"
+                      onClick={() =>
+                        setExpanded((prev) => ({
+                          ...prev,
+                          [t.slug]: !(prev[t.slug] ?? true),
+                        }))
+                      }
+                      aria-expanded={expanded[t.slug] ?? true}
+                    >
+                      {expanded[t.slug] ?? true ? (
+                        <Image
+                          src="/folder-open.svg"
+                          alt="folder open"
+                          className="h-8 w-8"
+                          width={32}
+                          height={32}
+                        />
+                      ) : (
+                        <Image
+                          src="/folder-closed.svg"
+                          alt="folder closed"
+                          className="h-8 w-8 opacity-90"
+                          width={32}
+                          height={32}
+                        />
+                      )}
+                      <h2 className="text-base md:text-lg lg:text-xl font-medium text-left flex flex-row items-center text-balance">
+                        {t.title}
+                        <Badge className="size-6 min-w-0 min-h-0 m-2 p-2 flex items-center justify-center rounded-full text-sm">
+                          {isLoading
+                            ? ""
+                            : `${(t as any).count ?? list.length}`}
+                        </Badge>
+                      </h2>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {t.slug !== "ama" && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="icon">
+                              {isDeletingSlug === t.slug ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Delete this thread?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete the thread and its
+                                grouping messages.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={async () => {
+                                  try {
+                                    setIsDeletingSlug(t.slug);
+                                    await axios.delete("/api/threads", {
+                                      data: { slug: t.slug },
+                                    });
+                                    setThreads((prev) =>
+                                      prev.filter((x) => x.slug !== t.slug)
+                                    );
+                                    setMessagesByThread((prev) => {
+                                      const copy = { ...prev } as any;
+                                      delete copy[t.slug];
+                                      return copy;
+                                    });
+                                    toast.success("Thread deleted");
+                                  } catch (e: any) {
+                                    toast.error("Failed to delete thread", {
+                                      description:
+                                        e?.response?.data?.message ||
+                                        e?.message,
+                                    });
+                                  } finally {
+                                    setIsDeletingSlug(null);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </div>
+                  {(expanded[t.slug] ?? true) &&
+                    (isLoading ? (
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <Card key={i}>
+                            <CardContent>
+                              <div className="space-y-3">
+                                <div className="h-5 bg-muted rounded animate-pulse" />
+                                <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
+                                <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+                                <div className="flex gap-2 pt-2">
+                                  <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
+                                  <div className="h-9 w-12 bg-muted rounded animate-pulse" />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : visibleMessages.length === 0 ? (
+                      <Card>
+                        <CardContent className="p-8 text-center">
+                          <h3 className="text-xl font-semibold mb-2">
+                            No messages yet
+                          </h3>
+                          <p className="text-base text-muted-foreground">
+                            Share your link to start receiving messages
+                          </p>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                ) : visibleMessages.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <h3 className="text-xl font-semibold mb-2">
-                        No messages yet
-                      </h3>
-                      <p className="text-base text-muted-foreground">
-                        Share your link to start receiving messages
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {visibleMessages.map((message) => (
-                      <MessageCard
-                        key={message._id as string}
-                        message={message as any}
-                        onMessageDelete={handleDeleteMessageFactory(t.slug)}
-                        threadTitle={t.title}
-                        globalFilter={filter}
-                        onMessageMarked={(id, next) => {
-                          setMessagesByThread((prev) => {
-                            const copy = { ...prev };
-                            copy[t.slug] = (copy[t.slug] || [])
-                              .map((m) =>
-                                (m._id as any) === id
-                                  ? ({ ...m, isReplied: next } as any)
-                                  : m
-                              )
-                              .filter((m) => {
-                                if (filter === "all") return true;
-                                return filter === "replied"
-                                  ? (m as any).isReplied
-                                  : !(m as any).isReplied;
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {visibleMessages.map((message) => (
+                          <MessageCard
+                            key={message._id as string}
+                            message={message as any}
+                            onMessageDelete={handleDeleteMessageFactory(t.slug)}
+                            threadTitle={t.title}
+                            globalFilter={filter}
+                            onMessageMarked={(id, next) => {
+                              setMessagesByThread((prev) => {
+                                const copy = { ...prev };
+                                copy[t.slug] = (copy[t.slug] || [])
+                                  .map((m) =>
+                                    (m._id as any) === id
+                                      ? ({ ...m, isReplied: next } as any)
+                                      : m
+                                  )
+                                  .filter((m) => {
+                                    if (filter === "all") return true;
+                                    return filter === "replied"
+                                      ? (m as any).isReplied
+                                      : !(m as any).isReplied;
+                                  });
+                                return copy;
                               });
-                            return copy;
-                          });
-                        }}
-                      />
+                            }}
+                          />
+                        ))}
+                      </div>
                     ))}
-                  </div>
-                ))}
-            </div>
-          );
-        })}
+                  {i < threads.length - 1 && (
+                    <div className="py-2">
+                      <Separator />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
