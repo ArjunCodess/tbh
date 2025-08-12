@@ -1,72 +1,53 @@
-### 1. Goal (1–2 lines)
-- Add robust “replied / unreplied” state so users can filter inbox and prioritize unanswered items.
-- Support auto-mark on owner replies, manual mark/unmark, and fast server-side filtering.
+## Overview & Goals
 
-### 2. Data model changes (schema diff + short rationale)
-- Where (preferred): `lib/models/thread.schema.ts`
-  - Add fields:
-    - `isReplied: boolean` (default: false)
-    - `repliedAt: Date | null` (default: null)
-    - `repliedBy: Types.ObjectId | null` (ref `User`, default: null)
-    - `manuallyMarked: { by: Types.ObjectId; at: Date } | null` (default: null)
-  - Indexes:
-    - `({ userId: 1, isReplied: 1, createdAt: -1 })` for owner-scoped filtered pagination
-    - `({ isReplied: 1, createdAt: -1 })` for potential admin/global analytics
-- Optional (forward-compat) in `lib/models/message.schema.ts`:
-  - Add `isOwnerReply: boolean` (default: false) or `authorRole: 'owner' | 'visitor'` to distinguish messages for auto-marking logic.
-- Rationale: Thread-level flags enable O(1) filter without per-request aggregation; message-level flag enables auto-mark and recomputation.
+Provide owners a single binary state per message and per thread — replied or not replied — that drives visibility and workflow. When the owner replies via the “share to story” flow or uses an explicit reply action, the item auto-marks as replied and is removed from the default inbox view. Only the owner (logged-in profile owner) can see, mark, and reply.
 
-### 3. Migration plan (stepwise, no code)
-- Add new fields with defaults and new indexes to `Thread` (and `Message.isOwnerReply` if adopted).
-- Scan existing threads/messages:
-  - For each thread owned by `userId`, compute: if any message in thread has `isOwnerReply=true` → set `isReplied=true`, `repliedAt=latestOwnerReply.createdAt`, `repliedBy=userId`, clear `manuallyMarked`.
-  - Otherwise: set `isReplied=false`, null out reply fields.
-- Single-message fallback: if any message lacks a thread, create a synthetic thread per message (slug from message `_id`), re-associate message, then apply same logic.
-- Dry run: run aggregation to count total threads, total with owner replies, and prospective updates; log metrics and sample IDs.
-- Run live migration off-peak; batch with `limit/skip` and `ordered: false`; write idempotently based on computed target values so it’s safe to re-run.
-- Backups: snapshot DB or export thread/message collections; track progress with a `migrations` log doc.
+## Data model & migration
 
-### 4. Backend behavior & API surface
-- Threads listing: extend `GET /api/threads` (file: `app/api/threads/route.ts`) to accept `filter=replied|unreplied|all` and sort/pagination params; apply `{ userId, ...(filter) }` using new indexes.
-- Manual toggle:
-  - `POST /api/threads/:id/mark-replied` → sets `isReplied=true`, `repliedAt=now`, `repliedBy=ownerId`, `manuallyMarked={ by, at }`.
-  - `POST /api/threads/:id/mark-unreplied` → sets `isReplied=false`, clears `repliedAt`, `repliedBy`, `manuallyMarked`.
-- Auto-mark:
-  - On owner replying (future reply endpoint) or when creating a `Message` with `isOwnerReply=true`: upsert thread flags with `repliedAt=message.createdAt` if newer; do not overwrite `manuallyMarked` unless transitioning to true.
-  - Concurrency: use atomic update with `$max` on `repliedAt` and conditional set on `isReplied`.
-- Authorization: only the thread owner (session `user._id`) can list with filters for their threads and mark/unmark; visitors cannot mutate flags.
-- Deletion hooks:
-  - If owner deletes a reply message, recompute thread flags (aggregation: latest remaining owner reply); if none, set `isReplied=false`.
+- **message schema addition**: add `isReplied: boolean` (default `false`).
+- **thread schema addition**: add `isReplied: boolean` (default `false`). thread-level `isReplied = true` if any message in the thread is replied, or if the owner explicitly marks the thread replied.
+- **defaults**: existing messages/threads get `isReplied: false`.
+- **migration (idempotent, conceptual)**:
+  - add the fields with defaults on `Message` and `Thread`.
+  - create composite indexes to optimize inbox queries: `Message { userId: 1, isReplied: 1, createdAt: -1 }` and `Thread { userId: 1, isReplied: 1, createdAt: -1 }`.
+  - backfill rule: if historical UI metadata indicates a thread was visually treated as replied, set its `isReplied = true`.
 
-### 5. Frontend UX & placement (concise)
-- Dashboard header (`app/(root)/dashboard/DashboardClient.tsx`):
-  - Add a global filter control (“All / Unreplied / Replied”) synced to `?filter=` in URL; feed through to `/api/threads` call.
-- Thread list:
-  - Show an “Unreplied” badge on threads with `isReplied=false`; small “Replied · 2h ago” pill on replied ones.
-  - Per-thread overflow menu: “Mark replied / Mark unreplied”.
-  - Optional bulk action: “Mark all replied” (calls batch mark endpoint).
-- Message composer (owner reply flow, future):
-  - After successful reply, optimistically update thread pill to “Replied” and re-fetch.
-- `ThreadDropdown`:
-  - Preserve `q` behavior; add `filter` query param to maintain shareable views.
+## Backend behavior & APIs
 
-### 6. Edge cases & rules (short)
-- Owner deletes their reply → recompute thread reply state; if no owner replies remain, revert to `isReplied=false`.
-- Multiple owner replies → keep `repliedAt` as the latest owner reply time.
-- Manual mark vs auto: preserve `manuallyMarked` to distinguish in analytics; auto-mark should not clear manual unless transitioning states.
-- Soft-deleted messages (if introduced) must be excluded from reply computation; current hard deletes are already excluded.
-- Thread slug changes or merges retain flags on the target thread; recompute if messages move.
+- **endpoints**:
+  - `POST /api/messages/:id/mark-replied`
+  - `POST /api/messages/:id/mark-unreplied`
+  - `POST /api/threads/:id/mark-replied`
+  - `POST /api/threads/:id/mark-unreplied`
+- **authorization**: for each endpoint, verify the session user owns the target message/thread (`userId` matches). deny otherwise.
+- **story/share integration**: upon completing the “share to story” action, the frontend calls `POST /api/messages/:id/mark-replied` before or immediately after the share completes; the endpoint sets `isReplied = true`.
+- **query changes**:
+  - default inbox query (`GET /api/messages?`) excludes `isReplied = true` unless `?showReplied=true` is provided.
+  - optional filter `?replied=true|false` for explicit control.
+  - thread listing (`GET /api/threads?`) supports the same replied filter and defaults to hiding replied threads.
+- **consistency rules**:
+  - when marking a thread replied, optionally propagate to children and set all child `Message.isReplied = true` (configurable behavior; default recommended: propagate). the thread’s `isReplied` should also reflect if any child is replied.
 
-### 7. Performance & monitoring (1–2 bullets)
-- Use the new compound indexes; paginate thread list; avoid N+1 by not deriving flags at request time.
-- Emit metrics: `count_unreplied_by_user`, `mark_actions_total{mode=manual|auto}`, and migration counters; add minimal logs for slow queries.
+## Frontend placement & UX
 
-### 8. Rollout plan (short)
-- Feature-flag server filter + manual mark endpoints; ship schema and indexes first.
-- Run migration behind the flag; validate with dry-run counts; enable for a small cohort; monitor metrics and error rates; then full rollout.
-- Public profile routes (`/u/...`) remain unchanged.
+- **inbox defaults**: hide replied items by default; provide a top-level toggle “Show replied” / “Hide replied”.
+- **quick actions**: per message and per thread, show a small check icon to mark replied and an undo icon to unmark.
+- **auto-mark on share**: when the owner shares a message to Story, immediately mark it replied and remove it from the default view. show a transient toast: “Marked replied and shared.”
+- **thread behavior**: in non-default lists (e.g., All Threads), display a replied badge on thread headings when `thread.isReplied = true`. in thread view, hide replied messages by default with a control to “Show replied messages”.
+- **edge cases**: if the owner marks a thread replied and later unmarks a child message, two options:
+  - keep `thread.isReplied = true` until all children are unmarked; or
+  - set `thread.isReplied = false` if any child is unmarked.
+  - **recommendation**: `thread.isReplied = true` if any child has `isReplied = true` (more consistent with inbox expectations).
 
-Produce a concise doc following this outline.
+## Security & privacy notes
 
-- Added precise placements for schema, API, and UI changes (`lib/models/thread.schema.ts`, `app/api/threads/route.ts`, `app/(root)/dashboard/DashboardClient.tsx`, `components/ThreadDropdown.tsx`).
-- Covered indexes, migration steps (idempotent), endpoints for filter and marking, and minimal UX changes with URL-based filter state.
+- enforce owner-only actions on all mark/unmark endpoints.
+- do not expose `isReplied` to non-owners in public/profile APIs.
+- do not add `replied_by` or similar metadata; only store the `isReplied` boolean.
+
+## Acceptance checklist
+
+- migration adds `isReplied` with defaults and the `{ userId, isReplied }` indexes.
+- inbox API defaults to hiding replied items with optional `?showReplied=true` and `?replied` filters.
+- story/share flow marks message replied atomically with the share action.
+- only the owner can mark or unmark messages/threads.
