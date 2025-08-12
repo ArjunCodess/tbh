@@ -637,14 +637,26 @@ export default function DashboardClient({
                                     await axios.delete("/api/threads", {
                                       data: { slug: t.slug },
                                     });
-                                    setThreads((prev) =>
-                                      prev.filter((x) => x.slug !== t.slug)
+
+                                    const nextThreadsList = threads.filter(
+                                      (x) => x.slug !== t.slug
                                     );
+                                    setThreads(nextThreadsList);
+
                                     setMessagesByThread((prev) => {
                                       const copy = { ...prev } as any;
                                       delete copy[t.slug];
                                       return copy;
                                     });
+
+                                    if (selectedThreadSlug === t.slug) {
+                                      const fallbackSlug =
+                                        nextThreadsList.find((x) => x.slug === "ama")?.slug ||
+                                        nextThreadsList[0]?.slug ||
+                                        "ama";
+                                      setSelectedThreadSlug(fallbackSlug);
+                                    }
+
                                     toast.success("Thread deleted");
                                   } catch (e: any) {
                                     toast.error("Failed to delete thread", {
