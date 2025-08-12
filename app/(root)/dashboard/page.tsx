@@ -38,8 +38,8 @@ export default async function DashboardPage() {
     );
   }
 
-  const threadDocs = await ThreadModel.find({ userId }, { title: 1, slug: 1, isReplied: 1 }, { lean: true }).sort({ createdAt: -1 }).exec();
-  const plainThreads = (threadDocs || []).map((t: any) => ({ _id: String(t._id), title: String(t.title), slug: String(t.slug), isReplied: !!t.isReplied }));
+  const threadDocs = await ThreadModel.find({ userId }, { title: 1, slug: 1 }, { lean: true }).sort({ createdAt: -1 }).exec();
+  const plainThreads = (threadDocs || []).map((t: any) => ({ _id: String(t._id), title: String(t.title), slug: String(t.slug) }));
   const ama = plainThreads.find((t) => t.slug === "ama");
   const rest = plainThreads.filter((t) => t.slug !== "ama");
   const ordered = ama ? [ama, ...rest] : rest;

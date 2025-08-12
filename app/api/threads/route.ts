@@ -31,9 +31,7 @@ export async function GET(req: NextRequest) {
   const filter: 'unreplied' | 'replied' | 'all' =
     filterParam === 'replied' ? 'replied' : filterParam === 'all' ? 'all' : 'unreplied';
 
-  // show all threads for 'replied' and 'all'; only hide archived threads in 'unreplied'
   const threadCriteria: any = { userId };
-  if (filter === 'unreplied') threadCriteria.isReplied = false;
 
   const items = await ThreadModel.find(threadCriteria, null, { lean: true })
     .sort({ createdAt: -1 })
