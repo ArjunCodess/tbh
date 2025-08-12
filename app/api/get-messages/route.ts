@@ -37,6 +37,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const threadSlug = searchParams.get("threadSlug");
   const threadIdParam = searchParams.get("threadId");
+  const filterParam = (searchParams.get("filter") || "unreplied").toLowerCase();
+  const filter: "unreplied" | "replied" | "all" =
+    filterParam === "replied" ? "replied" : filterParam === "all" ? "all" : "unreplied";
 
   let targetThreadId: mongoose.Types.ObjectId | null = null;
   if (threadIdParam && mongoose.isValidObjectId(threadIdParam)) {
@@ -53,6 +56,7 @@ export async function GET(req: NextRequest) {
   try {
     const criteria: any = { userId };
     if (targetThreadId) criteria.threadId = targetThreadId;
+    if (filter !== "all") criteria.isReplied = filter === "replied";
 
     const messages = await MessageModel.find(criteria)
       .sort({ createdAt: -1 })
@@ -66,6 +70,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fallback: legacy embedded messages (pre-migration)
+    // note: filtering by replied is not applied to legacy data by design
     const pipeline: any[] = [
       { $match: { _id: userId } },
       { $unwind: "$messages" },

@@ -3,6 +3,7 @@ import connectToDatabase from '@/lib/connectToDatabase';
 import { getServerSession } from 'next-auth';
 import authOptions from '@/app/api/auth/[...nextauth]/options';
 import ThreadModel from '@/lib/models/thread.schema';
+import MessageModel from '@/lib/models/message.schema';
 import mongoose from 'mongoose';
 
 function slugify(title: string): string {
@@ -14,7 +15,7 @@ function slugify(title: string): string {
     .replace(/-+/g, '-');
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   await connectToDatabase();
 
   const session = await getServerSession(authOptions);
@@ -25,7 +26,16 @@ export async function GET() {
 
   const userId = user._id as string;
 
-  const items = await ThreadModel.find({ userId }, null, { lean: true })
+  const { searchParams } = new URL(req.url);
+  const filterParam = (searchParams.get('filter') || 'unreplied').toLowerCase();
+  const filter: 'unreplied' | 'replied' | 'all' =
+    filterParam === 'replied' ? 'replied' : filterParam === 'all' ? 'all' : 'unreplied';
+
+  // show all threads for 'replied' and 'all'; only hide archived threads in 'unreplied'
+  const threadCriteria: any = { userId };
+  if (filter === 'unreplied') threadCriteria.isReplied = false;
+
+  const items = await ThreadModel.find(threadCriteria, null, { lean: true })
     .sort({ createdAt: -1 })
     .exec();
 
@@ -34,7 +44,22 @@ export async function GET() {
   const rest = items.filter((t: any) => t.slug !== 'ama');
   const data = ama ? [ama, ...rest] : rest;
 
-  return Response.json({ success: true, threads: data }, { status: 200 });
+  // compute filtered message counts per thread via aggregation
+  const match: any = { userId: new mongoose.Types.ObjectId(userId) };
+  if (filter !== 'all') match.isReplied = filter === 'replied';
+  const counts = await MessageModel.aggregate([
+    { $match: match },
+    { $group: { _id: '$threadId', c: { $sum: 1 } } },
+  ]).exec();
+  const idToCount = new Map<string, number>();
+  for (const row of counts) idToCount.set(String(row._id), row.c as number);
+
+  const withCounts = data.map((t: any) => ({
+    ...t,
+    count: idToCount.get(String(t._id)) || 0,
+  }));
+
+  return Response.json({ success: true, threads: withCounts }, { status: 200 });
 }
 
 export async function POST(req: NextRequest) {
