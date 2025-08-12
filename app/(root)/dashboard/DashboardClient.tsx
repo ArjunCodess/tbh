@@ -90,12 +90,7 @@ export default function DashboardClient({
     useState<string>(initialSelected);
 
   const [profileUrl, setProfileUrl] = useState("");
-  const [filter, setFilter] = useState<'unreplied' | 'replied' | 'all'>(() => {
-    if (typeof window === 'undefined') return 'unreplied';
-    const url = new URL(window.location.href);
-    const f = (url.searchParams.get('f') || 'unreplied').toLowerCase();
-    return f === 'replied' ? 'replied' : f === 'all' ? 'all' : 'unreplied';
-  });
+  const [filter, setFilter] = useState<'unreplied' | 'replied' | 'all'>('unreplied');
 
   const fetchThreadsAndMessages = useCallback(async (showRefreshToast = false) => {
     if (showRefreshToast) setIsRefreshing(true);
@@ -163,6 +158,14 @@ export default function DashboardClient({
       setProfileUrl(url);
     }
   }, [username, selectedThreadSlug]);
+
+  useEffect(() => {
+    const url = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+    if (!url) return;
+    const f = (url.searchParams.get('f') || 'unreplied').toLowerCase();
+    const next = f === 'replied' ? 'replied' : f === 'all' ? 'all' : 'unreplied';
+    if (next !== filter) setFilter(next);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -347,7 +350,8 @@ export default function DashboardClient({
         <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-4">
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">accept anonymous messages</span>
               {(isToggling) && (
                 <Loader2 className="h-3 w-3 animate-spin" />
               )}
@@ -355,7 +359,19 @@ export default function DashboardClient({
                 checked={acceptMessages}
                 onCheckedChange={handleSwitchChange}
                 disabled={isToggling}
+                aria-label="toggle accepting anonymous messages"
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant={filter === 'unreplied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('unreplied')} suppressHydrationWarning>
+                Unreplied
+              </Button>
+              <Button variant={filter === 'replied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('replied')} suppressHydrationWarning>
+                Replied
+              </Button>
+              <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')} suppressHydrationWarning>
+                All
+              </Button>
             </div>
             <Button
               size="default"
@@ -390,17 +406,6 @@ export default function DashboardClient({
 
         <Card>
           <CardContent>
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <Button variant={filter === 'unreplied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('unreplied')}>
-                Unreplied
-              </Button>
-              <Button variant={filter === 'replied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('replied')}>
-                Replied
-              </Button>
-              <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')}>
-                All
-              </Button>
-            </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
@@ -632,13 +637,15 @@ export default function DashboardClient({
                       }
                     }}
                   >
-                    {isTogglingThreadId === (t as any)._id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (t as any).isReplied ? (
-                      'Unreplied'
-                    ) : (
-                      'Replied'
-                    )}
+                    {t.slug !== "ama" ? (
+                      isTogglingThreadId === (t as any)._id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (t as any).isReplied ? (
+                        'Unreplied'
+                      ) : (
+                        'Replied'
+                      )
+                    ) : null}
                   </Button>
                 {t.slug !== "ama" && (
                   <AlertDialog>

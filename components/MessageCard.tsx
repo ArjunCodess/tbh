@@ -4,7 +4,7 @@ import React from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Trash2, Loader2, Share2 } from "lucide-react";
+import { Trash2, Loader2, Share2, Send, Reply } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -29,7 +29,7 @@ type MessageCardProps = {
   message: Message;
   onMessageDelete: (messageId: string) => void;
   threadTitle?: string;
-  globalFilter?: 'unreplied' | 'replied' | 'all';
+  globalFilter?: "unreplied" | "replied" | "all";
   onMessageMarked?: (id: string, next: boolean) => void;
 };
 
@@ -64,7 +64,9 @@ export default function MessageCard({
       const params = new URLSearchParams();
       params.set("reply", message.content);
       if (threadTitle) params.set("thread", threadTitle);
-      const res = await fetch(`/api/reply-image-generation?${params.toString()}`);
+      const res = await fetch(
+        `/api/reply-image-generation?${params.toString()}`
+      );
       if (!res.ok) throw new Error(`failed to generate image (${res.status})`);
       const blob = await res.blob();
 
@@ -157,9 +159,9 @@ export default function MessageCard({
         : `/api/messages/${message._id}/mark-unreplied`;
       await axios.post(url);
       onMessageMarked?.(message._id as string, next);
-      toast.success(next ? 'Marked replied' : 'Marked unreplied');
+      toast.success(next ? "Marked replied" : "Marked unreplied");
     } catch {
-      toast.error('Failed to update');
+      toast.error("Failed to update");
     } finally {
       setIsToggling(false);
     }
@@ -179,14 +181,13 @@ export default function MessageCard({
           <p className="text-sm text-muted-foreground font-medium">
             {dayjs(message.createdAt).fromNow()}
           </p>
-          <div className="flex gap-2 pt-2">
+          <div className="flex flex-row items-center gap-2 pt-2 w-full">
             <Button
-              type="button"
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={handleShareStory}
               disabled={isSharing}
-              className="flex-1 text-sm"
+              className="flex-1 flex items-center justify-center text-sm"
             >
               {isSharing ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -195,27 +196,31 @@ export default function MessageCard({
               )}
               {isSharing ? "Sharing…" : "Share to Story"}
             </Button>
-
             <Button
-              type="button"
               variant="outline"
               size="icon"
               onClick={toggleReplied}
               disabled={isToggling}
-              className="flex-1 text-sm"
+              className={`transition ${
+                (message as any).isReplied
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-white text-foreground border-input hover:bg-accent"
+              }`}
             >
               {isToggling ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
-              {(message as any).isReplied ? 'Unreplied' : 'Replied'}
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (message as any).isReplied ? (
+                <Send className="h-4 w-4" />
+              ) : (
+                <Reply className="h-4 w-4" />
+              )}
             </Button>
-
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="flex items-center justify-center text-destructive hover:text-destructive hover:bg-destructive/10"
                   disabled={isDeleting}
                 >
                   {isDeleting ? (
