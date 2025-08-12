@@ -171,7 +171,7 @@ export default function MessageCard({
     <Card className="hover:shadow-lg transition-all duration-200">
       <CardContent className="flex flex-col h-full">
         {/* Message */}
-        <p className="text-balance font-medium text-lg leading-relaxed line-clamp-4 break-words whitespace-pre-wrap">
+        <p className="text-balance font-medium text-base md:text-lg line-clamp-4 break-words whitespace-pre-wrap">
           {message.content}
         </p>
 
@@ -184,7 +184,7 @@ export default function MessageCard({
           <div className="flex flex-row items-center gap-2 pt-2 w-full">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={handleShareStory}
               disabled={isSharing}
               className="flex-1 flex items-center justify-center text-sm"
