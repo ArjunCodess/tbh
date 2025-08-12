@@ -4,7 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
-import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Copy,
@@ -14,6 +19,7 @@ import {
   ImagePlus,
   Trash2,
   Plus,
+  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -46,7 +52,6 @@ type ThreadLite = { _id?: string; title: string; slug: string };
 
 type DashboardClientProps = {
   username: string;
-  initialAcceptMessages: boolean;
   dailyPrompt: string;
   initialThreads: ThreadLite[];
   initialMessagesByThread: Record<string, Message[]>;
@@ -54,14 +59,11 @@ type DashboardClientProps = {
 
 export default function DashboardClient({
   username,
-  initialAcceptMessages,
   dailyPrompt,
   initialThreads,
   initialMessagesByThread,
 }: DashboardClientProps) {
   const [copied, setCopied] = useState(false);
-  const [acceptMessages, setAcceptMessages] = useState(initialAcceptMessages);
-  const [isToggling, setIsToggling] = useState(false);
   const [threads, setThreads] = useState<ThreadLite[]>(initialThreads);
   const [messagesByThread, setMessagesByThread] = useState<
     Record<string, Message[]>
@@ -74,7 +76,7 @@ export default function DashboardClient({
   const [isSharingToStory, setIsSharingToStory] = useState(false);
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [isDeletingSlug, setIsDeletingSlug] = useState<string | null>(null);
-  const [isTogglingThreadId, setIsTogglingThreadId] = useState<string | null>(null);
+
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [isCreatingFromPrompt, setIsCreatingFromPrompt] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
@@ -90,88 +92,99 @@ export default function DashboardClient({
     useState<string>(initialSelected);
 
   const [profileUrl, setProfileUrl] = useState("");
-  const [filter, setFilter] = useState<'unreplied' | 'replied' | 'all'>('unreplied');
+  const [filter, setFilter] = useState<"unreplied" | "replied" | "all">(
+    "unreplied"
+  );
 
-  const fetchThreadsAndMessages = useCallback(async (showRefreshToast = false) => {
-    if (showRefreshToast) setIsRefreshing(true);
-    setIsThreadsLoading(true);
-    try {
-      const tRes = await axios.get<{ success: boolean; threads: (ThreadLite & { count?: number })[] }>(
-        "/api/threads",
-        { params: { filter } }
-      );
-      const fetchedThreads = tRes.data?.threads || [];
-      const ordered = [
-        ...fetchedThreads.filter((t) => t.slug === "ama"),
-        ...fetchedThreads.filter((t) => t.slug !== "ama"),
-      ];
-      setThreads(ordered);
+  const fetchThreadsAndMessages = useCallback(
+    async (showRefreshToast = false) => {
+      if (showRefreshToast) setIsRefreshing(true);
+      setIsThreadsLoading(true);
+      try {
+        const tRes = await axios.get<{
+          success: boolean;
+          threads: (ThreadLite & { count?: number })[];
+        }>("/api/threads", { params: { filter } });
+        const fetchedThreads = tRes.data?.threads || [];
+        const ordered = [
+          ...fetchedThreads.filter((t) => t.slug === "ama"),
+          ...fetchedThreads.filter((t) => t.slug !== "ama"),
+        ];
+        setThreads(ordered);
 
-      const loaders: Record<string, boolean> = {};
-      for (const t of ordered) loaders[t.slug] = true;
-      setLoadingThreads(loaders);
+        const loaders: Record<string, boolean> = {};
+        for (const t of ordered) loaders[t.slug] = true;
+        setLoadingThreads(loaders);
 
-      const results = await Promise.all(
-        ordered.map((t) =>
-          axios
-            .get<apiResponse>(`/api/get-messages`, {
-              params: { threadSlug: t.slug, filter },
-            })
-            .then((r) => ({
-              slug: t.slug,
-              messages: (r.data.messages || []) as Message[],
-            }))
-            .catch((error) => {
-              console.error(
-                `Failed to fetch messages for thread ${t.slug}:`,
-                error
-              );
-              return { slug: t.slug, messages: [] as Message[] };
-            })
-        )
-      );
-
-      const map: Record<string, Message[]> = {};
-      results.forEach(({ slug, messages }) => {
-        const sorted = [...messages].sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        const results = await Promise.all(
+          ordered.map((t) =>
+            axios
+              .get<apiResponse>(`/api/get-messages`, {
+                params: { threadSlug: t.slug, filter },
+              })
+              .then((r) => ({
+                slug: t.slug,
+                messages: (r.data.messages || []) as Message[],
+              }))
+              .catch((error) => {
+                console.error(
+                  `Failed to fetch messages for thread ${t.slug}:`,
+                  error
+                );
+                return { slug: t.slug, messages: [] as Message[] };
+              })
+          )
         );
-        map[slug] = sorted;
-      });
-      setMessagesByThread(map);
-      if (showRefreshToast) toast.success("Messages refreshed");
-    } catch {
-      toast.error("Failed to fetch threads or messages");
-    } finally {
-      setIsThreadsLoading(false);
-      setIsRefreshing(false);
-      setLoadingThreads({});
-    }
-  }, [filter]);
-  
+
+        const map: Record<string, Message[]> = {};
+        results.forEach(({ slug, messages }) => {
+          const sorted = [...messages].sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          map[slug] = sorted;
+        });
+        setMessagesByThread(map);
+        if (showRefreshToast) toast.success("Messages refreshed");
+      } catch {
+        toast.error("Failed to fetch threads or messages");
+      } finally {
+        setIsThreadsLoading(false);
+        setIsRefreshing(false);
+        setLoadingThreads({});
+      }
+    },
+    [filter]
+  );
+
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const url = `${window.location.origin}/u/${username}?q=${encodeURIComponent(
-        selectedThreadSlug
-      )}`;
+      const url = `${
+        window.location.origin
+      }/u/${username}?q=${encodeURIComponent(selectedThreadSlug)}`;
       setProfileUrl(url);
     }
   }, [username, selectedThreadSlug]);
 
   useEffect(() => {
-    const url = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+    const url =
+      typeof window !== "undefined" ? new URL(window.location.href) : null;
     if (!url) return;
-    const f = (url.searchParams.get('f') || 'unreplied').toLowerCase();
-    const next = f === 'replied' ? 'replied' : f === 'all' ? 'all' : 'unreplied';
+    const f = (url.searchParams.get("f") || "unreplied").toLowerCase();
+    const next =
+      f === "replied" ? "replied" : f === "all" ? "all" : "unreplied";
     if (next !== filter) setFilter(next);
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      url.searchParams.set('f', filter);
-      window.history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      url.searchParams.set("f", filter);
+      window.history.replaceState(
+        null,
+        "",
+        `${url.pathname}?${url.searchParams.toString()}`
+      );
     }
   }, [filter]);
 
@@ -266,7 +279,8 @@ export default function DashboardClient({
         setSelectedThreadSlug(created.slug);
       }
 
-      await fetchThreadsAndMessages(true);    } catch (e: any) {
+      await fetchThreadsAndMessages(true);
+    } catch (e: any) {
       toast.error("Failed to create thread", {
         description: e?.response?.data?.message || e?.message,
       });
@@ -319,21 +333,6 @@ export default function DashboardClient({
     }
   };
 
-  const handleSwitchChange = async (checked: boolean) => {
-    setIsToggling(true);
-    try {
-      const response = await axios.post<apiResponse>("/api/accept-messages", {
-        acceptMessages: checked,
-      });
-      setAcceptMessages(checked);
-      toast.success(response.data.message);
-    } catch {
-      toast.error("Failed to update settings");
-    } finally {
-      setIsToggling(false);
-    }
-  };
-
   const handleDeleteMessageFactory =
     (threadSlug: string) => (messageId: string) => {
       setMessagesByThread((prev) => ({
@@ -350,29 +349,6 @@ export default function DashboardClient({
         <div className="flex flex-col md:flex-row items-center justify-between gap-2 mb-4">
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">accept anonymous messages</span>
-              {(isToggling) && (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              )}
-              <Switch
-                checked={acceptMessages}
-                onCheckedChange={handleSwitchChange}
-                disabled={isToggling}
-                aria-label="toggle accepting anonymous messages"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant={filter === 'unreplied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('unreplied')} suppressHydrationWarning>
-                Unreplied
-              </Button>
-              <Button variant={filter === 'replied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('replied')} suppressHydrationWarning>
-                Replied
-              </Button>
-              <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')} suppressHydrationWarning>
-                All
-              </Button>
-            </div>
             <Button
               size="default"
               variant="outline"
@@ -526,6 +502,28 @@ export default function DashboardClient({
 
       <Separator className="mb-6" />
 
+      <div className="mb-4 flex items-center justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setFilter("unreplied")}>
+              Unreplied
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("replied")}>
+              Replied
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("all")}>
+              All
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Messages grouped by thread */}
       <div className="space-y-8">
         {isThreadsLoading && (
@@ -563,8 +561,10 @@ export default function DashboardClient({
           const list = messagesByThread[t.slug] || [];
           const isLoading = !!loadingThreads[t.slug];
           const visibleMessages = list.filter((m) => {
-            if (filter === 'all') return true;
-            return filter === 'replied' ? (m as any).isReplied : !(m as any).isReplied;
+            if (filter === "all") return true;
+            return filter === "replied"
+              ? (m as any).isReplied
+              : !(m as any).isReplied;
           });
           return (
             <div
@@ -603,103 +603,66 @@ export default function DashboardClient({
                   <h2 className="text-base md:text-lg lg:text-xl font-bold text-left flex flex-row items-center text-balance">
                     {t.title}
                     <Badge className="size-6 min-w-0 min-h-0 m-2 p-2 flex items-center justify-center rounded-full text-sm">
-                      {isLoading ? '' : `${(t as any).count ?? list.length}`}
+                      {isLoading ? "" : `${(t as any).count ?? list.length}`}
                     </Badge>
                   </h2>
                 </button>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isTogglingThreadId === (t as any)._id}
-                    onClick={async () => {
-                      try {
-                        const id = String((t as any)._id || '');
-                        if (!id) return;
-                        setIsTogglingThreadId(id);
-                        const isReplied = (t as any).isReplied === true;
-                        const url = isReplied
-                          ? `/api/threads/${id}/mark-unreplied`
-                          : `/api/threads/${id}/mark-replied`;
-                        await axios.post(url);
-                        setThreads((prev) => {
-                          const updated = prev.map((x) =>
-                            String((x as any)._id) === id ? ({ ...(x as any), isReplied: !isReplied } as any) : x
-                          );
-                          return updated;
-                        });
-                        if ((filter === 'unreplied' && !isReplied) || (filter === 'replied' && isReplied)) {
-                          // stay consistent by refreshing counts and lists
-                          await fetchThreadsAndMessages(false);
-                        }
-                      } finally {
-                        setIsTogglingThreadId(null);
-                      }
-                    }}
-                  >
-                    {t.slug !== "ama" ? (
-                      isTogglingThreadId === (t as any)._id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (t as any).isReplied ? (
-                        'Unreplied'
-                      ) : (
-                        'Replied'
-                      )
-                    ) : null}
-                  </Button>
-                {t.slug !== "ama" && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="icon">
-                        {isDeletingSlug === t.slug ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this thread?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete the thread and its
-                          grouping messages.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={async () => {
-                            try {
-                              setIsDeletingSlug(t.slug);
-                              await axios.delete("/api/threads", {
-                                data: { slug: t.slug },
-                              });
-                              setThreads((prev) =>
-                                prev.filter((x) => x.slug !== t.slug)
-                              );
-                              setMessagesByThread((prev) => {
-                                const copy = { ...prev } as any;
-                                delete copy[t.slug];
-                                return copy;
-                              });
-                              toast.success("Thread deleted");
-                            } catch (e: any) {
-                              toast.error("Failed to delete thread", {
-                                description:
-                                  e?.response?.data?.message || e?.message,
-                              });
-                            } finally {
-                              setIsDeletingSlug(null);
-                            }
-                          }}
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
+                  {t.slug !== "ama" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="icon">
+                          {isDeletingSlug === t.slug ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Delete this thread?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the thread and its
+                            grouping messages.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              try {
+                                setIsDeletingSlug(t.slug);
+                                await axios.delete("/api/threads", {
+                                  data: { slug: t.slug },
+                                });
+                                setThreads((prev) =>
+                                  prev.filter((x) => x.slug !== t.slug)
+                                );
+                                setMessagesByThread((prev) => {
+                                  const copy = { ...prev } as any;
+                                  delete copy[t.slug];
+                                  return copy;
+                                });
+                                toast.success("Thread deleted");
+                              } catch (e: any) {
+                                toast.error("Failed to delete thread", {
+                                  description:
+                                    e?.response?.data?.message || e?.message,
+                                });
+                              } finally {
+                                setIsDeletingSlug(null);
+                              }
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </div>
               {(expanded[t.slug] ?? true) &&
@@ -744,12 +707,18 @@ export default function DashboardClient({
                         onMessageMarked={(id, next) => {
                           setMessagesByThread((prev) => {
                             const copy = { ...prev };
-                            copy[t.slug] = (copy[t.slug] || []).map((m) =>
-                              (m._id as any) === id ? ({ ...m, isReplied: next } as any) : m
-                            ).filter((m) => {
-                              if (filter === 'all') return true;
-                              return filter === 'replied' ? (m as any).isReplied : !(m as any).isReplied;
-                            });
+                            copy[t.slug] = (copy[t.slug] || [])
+                              .map((m) =>
+                                (m._id as any) === id
+                                  ? ({ ...m, isReplied: next } as any)
+                                  : m
+                              )
+                              .filter((m) => {
+                                if (filter === "all") return true;
+                                return filter === "replied"
+                                  ? (m as any).isReplied
+                                  : !(m as any).isReplied;
+                              });
                             return copy;
                           });
                         }}

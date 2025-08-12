@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
   ColorPicker,
@@ -13,6 +14,7 @@ import {
   ColorPickerSelection,
 } from "@/components/ui/color-picker";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 function ColorField({
   label,
@@ -67,6 +69,8 @@ export default function ProfileSettingsPage() {
   const [username, setUsername] = useState("");
   const [profileColor, setProfileColor] = useState<string | null>(null);
   const [textColor, setTextColor] = useState<string | null>(null);
+  const [acceptMessages, setAcceptMessages] = useState<boolean | null>(null);
+  const [isTogglingAccept, setIsTogglingAccept] = useState(false);
   const [usernameCheck, setUsernameCheck] = useState<
     "Idle" | "Checking" | "Available" | "Taken" | "Invalid" | "Unchanged"
   >("Idle");
@@ -92,6 +96,19 @@ export default function ProfileSettingsPage() {
         setTextColor(typeof u.textColor === "string" ? u.textColor : null);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/accept-messages", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.isAcceptingMessages === "boolean") {
+          setAcceptMessages(!!data.isAcceptingMessages);
+        }
+      })
+      .catch(() => {
+        // leave as null on error
+      });
   }, []);
 
   useEffect(() => {
@@ -209,6 +226,40 @@ export default function ProfileSettingsPage() {
                   onChange={setTextColor}
                 />
               </div>
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
+                <div>
+                  <div className="mb-1 text-sm font-medium">Accept anonymous messages</div>
+                  <p className="text-xs text-muted-foreground">Turn off to stop receiving new messages via your link.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isTogglingAccept && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <Switch
+                    checked={!!acceptMessages}
+                    onCheckedChange={async (checked) => {
+                      setIsTogglingAccept(true);
+                      try {
+                        const res = await fetch("/api/accept-messages", {
+                          method: "POST",
+                          headers: { "content-type": "application/json" },
+                          body: JSON.stringify({ acceptMessages: checked }),
+                        });
+                        const j = await res.json();
+                        if (!res.ok || !j?.success) throw new Error(j?.message || "Failed to update");
+                        setAcceptMessages(checked);
+                        toast.success(j?.message || "Updated");
+                      } catch (e: any) {
+                        toast.error(e?.message || "Failed to update settings");
+                      } finally {
+                        setIsTogglingAccept(false);
+                      }
+                    }}
+                    disabled={isTogglingAccept || acceptMessages === null}
+                    aria-label="toggle accepting anonymous messages"
+                  />
+                </div>
+              </div>
+            </div>
             </div>
             <div className="flex flex-col items-center gap-3">
               <Button
