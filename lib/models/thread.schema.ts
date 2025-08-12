@@ -4,6 +4,7 @@ export interface Thread extends Document {
   userId: Types.ObjectId;
   title: string;
   slug: string;
+  isReplied: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +19,7 @@ const ThreadSchema: Schema<Thread> = new mongoose.Schema(
     },
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, trim: true },
+    isReplied: { type: Boolean, required: true, default: false, index: true },
   },
   { timestamps: true }
 );
@@ -37,6 +39,7 @@ ThreadSchema.pre("save", function (next) {
 
 ThreadSchema.index({ userId: 1, slug: 1 }, { unique: true });
 ThreadSchema.index({ userId: 1, createdAt: -1 });
+ThreadSchema.index({ userId: 1, isReplied: 1, createdAt: -1 });
 
 const ThreadModel =
   (mongoose.models.Thread as mongoose.Model<Thread>) ||
