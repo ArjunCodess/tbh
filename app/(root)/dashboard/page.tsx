@@ -38,8 +38,8 @@ export default async function DashboardPage() {
     );
   }
 
-  const threadDocs = await ThreadModel.find({ userId }, { title: 1, slug: 1 }, { lean: true }).sort({ createdAt: -1 }).exec();
-  const plainThreads = (threadDocs || []).map((t: any) => ({ title: String(t.title), slug: String(t.slug) }));
+  const threadDocs = await ThreadModel.find({ userId }, { title: 1, slug: 1, isReplied: 1 }, { lean: true }).sort({ createdAt: -1 }).exec();
+  const plainThreads = (threadDocs || []).map((t: any) => ({ _id: String(t._id), title: String(t.title), slug: String(t.slug), isReplied: !!t.isReplied }));
   const ama = plainThreads.find((t) => t.slug === "ama");
   const rest = plainThreads.filter((t) => t.slug !== "ama");
   const ordered = ama ? [ama, ...rest] : rest;
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   const messagesByThreadEntries = await Promise.all(
     ordered.map(async (t) => {
       try {
-        const messages = await MessageModel.find({ userId, })
+        const messages = await MessageModel.find({ userId, isReplied: false })
           .populate({ path: 'threadId', match: { slug: t.slug }, select: '_id slug' })
           .sort({ createdAt: -1 })
           .lean();
@@ -57,6 +57,7 @@ export default async function DashboardPage() {
           content: String(m.content),
           createdAt: new Date(m.createdAt),
           threadId: String((m.threadId as any)._id),
+          isReplied: !!m.isReplied,
         }));
         return [t.slug, plain] as const;
       } catch (error) {

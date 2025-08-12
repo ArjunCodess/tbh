@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MessageCard from "@/components/MessageCard";
@@ -74,6 +74,7 @@ export default function DashboardClient({
   const [isSharingToStory, setIsSharingToStory] = useState(false);
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [isDeletingSlug, setIsDeletingSlug] = useState<string | null>(null);
+  const [isTogglingThreadId, setIsTogglingThreadId] = useState<string | null>(null);
   const [newThreadTitle, setNewThreadTitle] = useState("");
   const [isCreatingFromPrompt, setIsCreatingFromPrompt] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
@@ -89,21 +90,20 @@ export default function DashboardClient({
     useState<string>(initialSelected);
 
   const [profileUrl, setProfileUrl] = useState("");
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = `${window.location.origin}/u/${username}?q=${encodeURIComponent(
-        selectedThreadSlug
-      )}`;
-      setProfileUrl(url);
-    }
-  }, [username, selectedThreadSlug]);
+  const [filter, setFilter] = useState<'unreplied' | 'replied' | 'all'>(() => {
+    if (typeof window === 'undefined') return 'unreplied';
+    const url = new URL(window.location.href);
+    const f = (url.searchParams.get('f') || 'unreplied').toLowerCase();
+    return f === 'replied' ? 'replied' : f === 'all' ? 'all' : 'unreplied';
+  });
 
-  const fetchThreadsAndMessages = async (showRefreshToast = false) => {
+  const fetchThreadsAndMessages = useCallback(async (showRefreshToast = false) => {
     if (showRefreshToast) setIsRefreshing(true);
     setIsThreadsLoading(true);
     try {
-      const tRes = await axios.get<{ success: boolean; threads: ThreadLite[] }>(
-        "/api/threads"
+      const tRes = await axios.get<{ success: boolean; threads: (ThreadLite & { count?: number })[] }>(
+        "/api/threads",
+        { params: { filter } }
       );
       const fetchedThreads = tRes.data?.threads || [];
       const ordered = [
@@ -120,7 +120,7 @@ export default function DashboardClient({
         ordered.map((t) =>
           axios
             .get<apiResponse>(`/api/get-messages`, {
-              params: { threadSlug: t.slug },
+              params: { threadSlug: t.slug, filter },
             })
             .then((r) => ({
               slug: t.slug,
@@ -153,7 +153,28 @@ export default function DashboardClient({
       setIsRefreshing(false);
       setLoadingThreads({});
     }
-  };
+  }, [filter]);
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = `${window.location.origin}/u/${username}?q=${encodeURIComponent(
+        selectedThreadSlug
+      )}`;
+      setProfileUrl(url);
+    }
+  }, [username, selectedThreadSlug]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('f', filter);
+      window.history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+    }
+  }, [filter]);
+
+  useEffect(() => {
+    fetchThreadsAndMessages(false);
+  }, [fetchThreadsAndMessages]);
 
   const shareToStory = async () => {
     if (isSharingToStory) return;
@@ -369,6 +390,17 @@ export default function DashboardClient({
 
         <Card>
           <CardContent>
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <Button variant={filter === 'unreplied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('unreplied')}>
+                Unreplied
+              </Button>
+              <Button variant={filter === 'replied' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('replied')}>
+                Replied
+              </Button>
+              <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')}>
+                All
+              </Button>
+            </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
@@ -525,6 +557,10 @@ export default function DashboardClient({
         {threads.map((t) => {
           const list = messagesByThread[t.slug] || [];
           const isLoading = !!loadingThreads[t.slug];
+          const visibleMessages = list.filter((m) => {
+            if (filter === 'all') return true;
+            return filter === 'replied' ? (m as any).isReplied : !(m as any).isReplied;
+          });
           return (
             <div
               key={t.slug}
@@ -562,10 +598,48 @@ export default function DashboardClient({
                   <h2 className="text-base md:text-lg lg:text-xl font-bold text-left flex flex-row items-center text-balance">
                     {t.title}
                     <Badge className="size-6 min-w-0 min-h-0 m-2 p-2 flex items-center justify-center rounded-full text-sm">
-                      {!isLoading && `${list.length}`}
+                      {isLoading ? '' : `${(t as any).count ?? list.length}`}
                     </Badge>
                   </h2>
                 </button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isTogglingThreadId === (t as any)._id}
+                    onClick={async () => {
+                      try {
+                        const id = String((t as any)._id || '');
+                        if (!id) return;
+                        setIsTogglingThreadId(id);
+                        const isReplied = (t as any).isReplied === true;
+                        const url = isReplied
+                          ? `/api/threads/${id}/mark-unreplied`
+                          : `/api/threads/${id}/mark-replied`;
+                        await axios.post(url);
+                        setThreads((prev) => {
+                          const updated = prev.map((x) =>
+                            String((x as any)._id) === id ? ({ ...(x as any), isReplied: !isReplied } as any) : x
+                          );
+                          return updated;
+                        });
+                        if ((filter === 'unreplied' && !isReplied) || (filter === 'replied' && isReplied)) {
+                          // stay consistent by refreshing counts and lists
+                          await fetchThreadsAndMessages(false);
+                        }
+                      } finally {
+                        setIsTogglingThreadId(null);
+                      }
+                    }}
+                  >
+                    {isTogglingThreadId === (t as any)._id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (t as any).isReplied ? (
+                      'Unreplied'
+                    ) : (
+                      'Replied'
+                    )}
+                  </Button>
                 {t.slug !== "ama" && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -619,6 +693,7 @@ export default function DashboardClient({
                     </AlertDialogContent>
                   </AlertDialog>
                 )}
+                </div>
               </div>
               {(expanded[t.slug] ?? true) &&
                 (isLoading ? (
@@ -639,7 +714,7 @@ export default function DashboardClient({
                       </Card>
                     ))}
                   </div>
-                ) : list.length === 0 ? (
+                ) : visibleMessages.length === 0 ? (
                   <Card>
                     <CardContent className="p-8 text-center">
                       <h3 className="text-xl font-semibold mb-2">
@@ -652,12 +727,25 @@ export default function DashboardClient({
                   </Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {list.map((message) => (
+                    {visibleMessages.map((message) => (
                       <MessageCard
                         key={message._id as string}
                         message={message as any}
                         onMessageDelete={handleDeleteMessageFactory(t.slug)}
                         threadTitle={t.title}
+                        globalFilter={filter}
+                        onMessageMarked={(id, next) => {
+                          setMessagesByThread((prev) => {
+                            const copy = { ...prev };
+                            copy[t.slug] = (copy[t.slug] || []).map((m) =>
+                              (m._id as any) === id ? ({ ...m, isReplied: next } as any) : m
+                            ).filter((m) => {
+                              if (filter === 'all') return true;
+                              return filter === 'replied' ? (m as any).isReplied : !(m as any).isReplied;
+                            });
+                            return copy;
+                          });
+                        }}
                       />
                     ))}
                   </div>
