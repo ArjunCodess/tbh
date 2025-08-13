@@ -8,12 +8,12 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!id) return Response.json({ success: false, message: 'id is required' }, { status: 400 });
 
   const session = await getServerSession(authOptions);
-  const user = (session as any)?.user as any;
-  if (!session || !user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+  const userId = (session as any)?.user?.id ?? (session as any)?.user?._id;
+  if (!session || !userId) {
+    return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+  }  await connectToDatabase();
 
-  await connectToDatabase();
-
-  const res = await MessageModel.updateOne({ _id: id, userId: user._id }, { $set: { isReplied: false } });
+  const res = await MessageModel.updateOne({ _id: id, userId }, { $set: { isReplied: false } });
   if (res.matchedCount === 0) return Response.json({ success: false, message: 'Message not found' }, { status: 404 });
   return Response.json({ success: true, message: 'Marked unreplied' }, { status: 200 });
 }

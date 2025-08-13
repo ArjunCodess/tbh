@@ -85,7 +85,7 @@ export default function MessageForm({
           username,
           threadSlug,
         }),
-      });
+    });
 
       if (!res.ok) {
         let message = `Failed with status ${res.status}`;

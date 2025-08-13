@@ -194,6 +194,12 @@ export default function DashboardClient({
 
   const shareToStory = async () => {
     if (isSharingToStory) return;
+
+    if (!navigator.share || !navigator.canShare) {
+      toast.error("Sharing is not supported on this device or browser");
+      return;
+    }
+
     setIsSharingToStory(true);
     let wrapper: HTMLDivElement | null = null;
     try {
@@ -252,7 +258,6 @@ export default function DashboardClient({
       setIsSharingToStory(false);
     }
   };
-
   const handleCreateThread = async () => {
     const title = newThreadTitle.trim();
     if (!title || isCreatingThread) return;
@@ -651,7 +656,9 @@ export default function DashboardClient({
 
                                     if (selectedThreadSlug === t.slug) {
                                       const fallbackSlug =
-                                        nextThreadsList.find((x) => x.slug === "ama")?.slug ||
+                                        nextThreadsList.find(
+                                          (x) => x.slug === "ama"
+                                        )?.slug ||
                                         nextThreadsList[0]?.slug ||
                                         "ama";
                                       setSelectedThreadSlug(fallbackSlug);
@@ -719,18 +726,11 @@ export default function DashboardClient({
                             onMessageMarked={(id, next) => {
                               setMessagesByThread((prev) => {
                                 const copy = { ...prev };
-                                copy[t.slug] = (copy[t.slug] || [])
-                                  .map((m) =>
-                                    (m._id as any) === id
-                                      ? ({ ...m, isReplied: next } as any)
-                                      : m
-                                  )
-                                  .filter((m) => {
-                                    if (filter === "all") return true;
-                                    return filter === "replied"
-                                      ? (m as any).isReplied
-                                      : !(m as any).isReplied;
-                                  });
+                                copy[t.slug] = (copy[t.slug] || []).map((m) =>
+                                  String(m._id) === id
+                                    ? ({ ...m, isReplied: next } as any)
+                                    : m
+                                );
                                 return copy;
                               });
                             }}

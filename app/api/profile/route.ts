@@ -15,14 +15,15 @@ const RESERVED = new Set([
 
 export async function PATCH(req: Request) {
   await connectToDatabase();
-  const session = await getServerSession(authOptions as any);
-  if (!(session as any)?.user?._id) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?._id) {
     return Response.json(
       { success: false, message: "not authenticated" },
       { status: 401 }
     );
   }
-  const userId = (session as any).user._id as string;
+  
+  const userId = session.user._id;
 
   const body = await req.json();
   const parsed = profileCustomisationsSchema.safeParse(body);
@@ -59,22 +60,26 @@ export async function PATCH(req: Request) {
         { status: 404 }
       );
     if (next !== String(current.username).toLowerCase()) {
-      const taken = await UserModel.findOne({ username: next })
-        .collation({ locale: "en", strength: 2 })
-        .lean();
-      if (taken)
-        return Response.json(
-          { success: false, message: "username is already taken" },
-          { status: 409 }
-        );
       update.username = next;
+      // The uniqueness will be enforced by a database constraint.
+      // Any duplicate‐key error will be handled in the update below.
     }
   }
 
-  const saved = await UserModel.findByIdAndUpdate(
-    userId,
-    { $set: update },
-    { new: true }
-  );
-  return Response.json({ success: true, user: saved });
+  try {
+    const saved = await UserModel.findByIdAndUpdate(
+      userId,
+      { $set: update },
+      { new: true }
+    );
+    return Response.json({ success: true, user: saved });
+  } catch (error: any) {
+    if (error.code === 11000 && error.keyPattern?.username) {
+      return Response.json(
+        { success: false, message: "username is already taken" },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 }

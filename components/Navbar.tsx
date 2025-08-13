@@ -93,7 +93,7 @@ export default function Navbar() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                onSelect={() => signOut({ callbackUrl: "/sign-in" })}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
