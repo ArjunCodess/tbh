@@ -2,7 +2,7 @@
 
 import Color from "color";
 import { PipetteIcon } from "lucide-react";
-import { Slider } from "radix-ui";
+import * as Slider from "@radix-ui/react-slider";
 import {
   type ComponentProps,
   createContext,
@@ -53,7 +53,15 @@ export const ColorPicker = ({
   ...props
 }: ColorPickerProps) => {
   const base = useMemo(() => {
-    try { return Color(value ?? defaultValue); } catch { return Color(String(defaultValue)); }
+    try {
+      return Color(value ?? defaultValue);
+    } catch {
+      try {
+        return Color(String(defaultValue));
+      } catch {
+        return Color("#000000");
+      }
+    }
   }, [value, defaultValue]);
   const [hue, setHue] = useState(base.hue() || 0);
   const [saturation, setSaturation] = useState(base.saturationl() || 100);
@@ -230,6 +238,10 @@ export const ColorPickerEyeDropper = ({
 }: ColorPickerEyeDropperProps) => {
   const { setHue, setSaturation, setLightness } = useColorPicker();
   const handleEyeDropper = async () => {
+    if (!('EyeDropper' in window)) {
+      console.warn('EyeDropper API is not supported in this browser');
+      return;
+    }
     try {
       // @ts-expect-error - EyeDropper API is experimental
       const eyeDropper = new EyeDropper();

@@ -10,7 +10,10 @@ function startOfUtcDay(date: Date): number {
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
 
-function isStale(updatedAt: Date | null | undefined, now: Date = new Date()): boolean {
+function isStale(
+  updatedAt: Date | null | undefined,
+  now: Date = new Date()
+): boolean {
   if (!updatedAt) return true;
   return startOfUtcDay(updatedAt) < startOfUtcDay(now);
 }
@@ -23,9 +26,12 @@ function deterministicFallback(userId: string, now: Date = new Date()): string {
     "what is one thing you learned today?",
     "what moment are you grateful for today?",
   ];
-  const key = `${userId}-${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
+  const key = `${userId}-${now.getUTCFullYear()}-${
+    now.getUTCMonth() + 1
+  }-${now.getUTCDate()}`;
   let hash = 0;
-  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < key.length; i += 1)
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
   return fallbacks[hash % fallbacks.length];
 }
 
@@ -41,13 +47,17 @@ async function generatePromptText(): Promise<string> {
   ].join("\n");
 
   const { text } = await generateText({ model, prompt, temperature: 0.7 });
-  const cleaned = String(text || "").trim().replace(/\s+/g, " ");
+  const cleaned = String(text || "")
+    .trim()
+    .replace(/\s+/g, " ");
   const normalized = cleaned.replace(/[.!?]+$/g, "");
   if (!normalized) throw new Error("empty ai response");
   return normalized.slice(0, 120);
 }
 
-export async function ensureDailyPromptFreshForUserId(userIdRaw: string): Promise<string> {
+export async function ensureDailyPromptFreshForUserId(
+  userIdRaw: string
+): Promise<string> {
   const userId = new mongoose.Types.ObjectId(String(userIdRaw));
 
   const existing = inFlightByUser.get(userId.toHexString());
@@ -65,24 +75,29 @@ export async function ensureDailyPromptFreshForUserId(userIdRaw: string): Promis
     let text: string | null = null;
     try {
       text = await generatePromptText();
-    } catch {
+    } catch (error) {
+      console.error("Failed to generate AI prompt:", error);
       text = null;
     }
     if (!text) {
       text = deterministicFallback(userId.toHexString(), now);
     }
 
-    await UserModel.updateOne(
-      { _id: userId },
-      {
-        $set: {
-          "dailyPrompt.text": text,
-          "dailyPrompt.updatedAt": now,
-          "dailyPrompt.promptVersion": 1,
-        },
-      }
-    ).exec();
-
+    try {
+      await UserModel.updateOne(
+        { _id: userId },
+        {
+          $set: {
+            "dailyPrompt.text": text,
+            "dailyPrompt.updatedAt": now,
+            "dailyPrompt.promptVersion": 1,
+          },
+        }
+      ).exec();
+    } catch (error) {
+      console.error("Failed to update daily prompt in database:", error);
+      throw error;
+    }
     return text;
   })();
 
@@ -95,10 +110,24 @@ export async function ensureDailyPromptFreshForUserId(userIdRaw: string): Promis
   }
 }
 
-export async function getDailyPromptForUserId(userIdRaw: string): Promise<{ text: string; updatedAt: Date | null; promptVersion: number } | null> {
+export async function getDailyPromptForUserId(
+  userIdRaw: string
+): Promise<{
+  text: string;
+  updatedAt: Date | null;
+  promptVersion: number;
+} | null> {
+  if (!userIdRaw || !mongoose.Types.ObjectId.isValid(userIdRaw)) {
+    throw new Error("Invalid user ID");
+  }
+  const userId = new mongoose.Types.ObjectId(String(userIdRaw));
   await connectToDatabase();
-  const user = await UserModel.findById(userIdRaw, { dailyPrompt: 1 }).lean();
+  const user = await UserModel.findById(userId, { dailyPrompt: 1 }).lean();
   if (!user) return null;
   const dp = (user as any).dailyPrompt || {};
-  return { text: String(dp.text || ""), updatedAt: dp.updatedAt || null, promptVersion: Number(dp.promptVersion || 1) };
+  return {
+    text: String(dp.text || ""),
+    updatedAt: dp.updatedAt || null,
+    promptVersion: Number(dp.promptVersion || 1),
+  };
 }
