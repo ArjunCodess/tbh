@@ -1,8 +1,8 @@
 import connectToDatabase from "@/lib/connectToDatabase";
 import UserModel from "@/lib/models/user.schema";
 import mongoose from "mongoose";
-import { google } from "@ai-sdk/google";
-import { generateText } from "ai";
+import { normalizeSingleLine, generateWithRetry, TransientAIError } from "@/lib/ai/generation";
+import { DAILY_PROMPT_TEMPLATE, GENZ_FALLBACK_DAILY } from "@/lib/ai/prompts";
 
 const inFlightByUser: Map<string, Promise<string>> = new Map();
 
@@ -19,13 +19,7 @@ function isStale(
 }
 
 function deterministicFallback(userId: string, now: Date = new Date()): string {
-  const fallbacks = [
-    "what tiny thing gives you butterflies?",
-    "what's your love language lately?",
-    "what kind of texts make you melt?",
-    "what first-date vibe do you love?",
-    "what makes you catch feelings fast?",
-  ];
+  const fallbacks = GENZ_FALLBACK_DAILY;
   const key = `${userId}-${now.getUTCFullYear()}-${
     now.getUTCMonth() + 1
   }-${now.getUTCDate()}`;
@@ -35,79 +29,16 @@ function deterministicFallback(userId: string, now: Date = new Date()): string {
   return fallbacks[hash % fallbacks.length];
 }
 
-class TransientAiError extends Error {}
-
-function isTransientAiError(error: any): boolean {
-  const status = (error as any)?.status || (error as any)?.response?.status;
-  const code = (error as any)?.code;
-  const name = (error as any)?.name || "";
-  const message = (error as any)?.message || "";
-  if (status && (status === 429 || status >= 500)) return true;
-  if (
-    code &&
-    ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENOTFOUND"].includes(code)
-  )
-    return true;
-  if (
-    /RateLimit|Timeout|FetchError|NetworkError/i.test(
-      String(name) + " " + String(message)
-    )
-  )
-    return true;
-  return false;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function generatePromptText(): Promise<string> {
-  const modelId = "gemini-2.0-flash";
-  const model = google(modelId);
-  const prompt = [
-    "Generate one short, playful Gen-Z style question for a public message board about crushes, love, or feelings.",
-    "Constraints:",
-    "- 4 to 10 words",
-    "- avoid sensitive topics, private data, explicit content, and naming specific people",
-    "- no age-related content; keep it inclusive and tasteful",
-    "- return only the question text, no quotes and no trailing punctuation",
-  ].join("\n");
-
-  const maxAttempts = 3;
-  const baseDelayMs = 250;
-  let lastError: any = null;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      const { text } = await generateText({ model, prompt, temperature: 0.7 });
-      const cleaned = String(text || "")
-        .trim()
-        .replace(/\s+/g, " ");
-      const normalized = cleaned.replace(/[.!?]+$/g, "");
-      if (!normalized) throw new Error("empty ai response");
-      return normalized.slice(0, 120);
-    } catch (error: any) {
-      lastError = error;
-      if (!isTransientAiError(error)) {
-        throw error;
-      }
-
-      console.warn("[dailyPrompt] transient AI failure", {
-        model: modelId,
-        attempt,
-        prompt,
-        error: String(error?.message || error),
-      });
-      if (attempt < maxAttempts) {
-        const delay = baseDelayMs * Math.pow(2, attempt - 1);
-        await sleep(delay);
-      }
-    }
-  }
-
-  throw new TransientAiError(
-    String(lastError?.message || "AI generation failed after retries")
-  );
+  const raw = await generateWithRetry(DAILY_PROMPT_TEMPLATE, {
+    temperature: 0.7,
+    maxAttempts: 3,
+    baseDelayMs: 250,
+    context: "dailyPrompt",
+  });
+  const normalized = normalizeSingleLine(raw);
+  if (!normalized) throw new Error("empty ai response");
+  return normalized;
 }
 
 export async function ensureDailyPromptFreshForUserId(
@@ -132,7 +63,7 @@ export async function ensureDailyPromptFreshForUserId(
       text = await generatePromptText();
     } catch (error) {
       // Only fall back after all transient retries fail. Non-transient errors bubble up.
-      if (error instanceof TransientAiError) {
+      if (error instanceof TransientAIError) {
         console.warn(
           "[dailyPrompt] falling back to deterministic after retries",
           {
