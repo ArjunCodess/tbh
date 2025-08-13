@@ -507,26 +507,6 @@ export default function DashboardClient({
 
       {/* Messages grouped by thread */}
       <div className="space-y-8">
-        {isThreadsLoading && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="h-5 bg-muted rounded animate-pulse" />
-                    <div className="h-5 bg-muted rounded animate-pulse w-3/4" />
-                    <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
-                    <div className="flex gap-2 pt-2">
-                      <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
-                      <div className="h-9 w-12 bg-muted rounded animate-pulse" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
         {!isThreadsLoading && threads.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center">
