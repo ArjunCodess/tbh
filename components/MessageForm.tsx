@@ -13,9 +13,9 @@ type MessageFormProps = {
 };
 
 const HARD_CODED_SUGGESTIONS = [
-  "What small win made your day this week?",
-  "Which city would you love to explore next?",
-  "What's a film you never get tired of?",
+  "Low-key crushing on anyone?",
+  "Ideal first date vibe?",
+  "What text makes you melt?",
 ] as const;
 
 export default function MessageForm({

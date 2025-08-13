@@ -19,14 +19,15 @@
 - provider and call
   - `const model = google("gemini-2.0-flash");`
   - `const { text } = await generateText({ model, prompt, temperature: 0.7, maxTokens: 40 });`
-- template v1
-  - intent: one short, friendly daily reflection question suitable for a public profile.
-  - constraints: 8–16 words, neutral, no sensitive/personal data, lowercase preferred, no trailing punctuation.
+- template
+  - intent: one short, playful Gen‑Z style question about crushes, love, or light feelings suitable for a public profile.
+  - constraints: 4–10 words, inclusive, avoid sensitive/personal data, no explicit content, no naming real people, no trailing punctuation.
   - prompt body:
-    - "generate one short, friendly daily reflection question for a public message board.\nconstraints:\n- 8 to 16 words\n- avoid sensitive topics and private data\n- neutral, inclusive tone\n- return only the question text, no quotes or punctuation at end"
+    - "Generate one short, playful Gen-Z style question for a public message board about crushes, love, or feelings.\nConstraints:\n- 4 to 10 words\n- avoid sensitive topics, private data, explicit content, and naming specific people\n- no age-related content; keep it inclusive and tasteful\n- return only the question text, no quotes and no trailing punctuation"
 - normalization and fallback
-  - trim and collapse whitespace; enforce max 120 chars; strip trailing punctuation.
-  - on failure (2 retries): pick deterministic fallback from a static list using hash of `userId + yyyy-mm-dd`.
+  - trim and collapse whitespace; enforce max 120 chars; strip trailing punctuation; if empty, throw "empty ai response".
+  - retries: up to 3 attempts with exponential backoff (250ms, 500ms) for transient errors; log attempt, model, and prompt on each failure.
+  - on final failure: deterministic fallback from a Gen‑Z themed list using hash of `userId + yyyy-mm-dd`.
 - scheduling
   - update on user login: compare `dailyPrompt.updatedAt` to current utc day start. if stale or null → regenerate and set new `updatedAt`.
   - same stale-check in `GET /api/daily-prompt` so direct hits refresh if necessary.

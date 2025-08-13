@@ -95,7 +95,12 @@ export default function ProfileSettingsPage() {
         setProfileColor(typeof u.profileColor === "string" ? u.profileColor : null);
         setTextColor(typeof u.textColor === "string" ? u.textColor : null);
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.error('Failed to fetch user data:', error);
+        if (error.message?.includes('auth') || error.message?.includes('unauthorized')) {
+          toast.error('Please log in to access your settings');
+        }
+      });
   }, []);
 
   useEffect(() => {
