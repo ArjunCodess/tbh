@@ -4,17 +4,53 @@ import { generateText } from "ai";
 
 export async function GET() {
   try {
-    const model = google("gemini-2.0-flash");
-    const prompt = `Generate three short, friendly, anonymous icebreaker questions suitable for a public profile message board.
+    const modelId = "gemini-2.0-flash";
+    const model = google(modelId);
+    const prompt = `Generate three short Gen-Z style questions for a public profile message board about crushes, love, or playful feelings.
 Output format: a single line string with questions separated by '||'.
 Constraints:
-- Avoid sensitive topics and personal data.
-- Each question should be 5-10 words.
-- Questions must be engaging but neutral.
-Example: What's a hobby you picked up recently?||What city would you love to explore next?||What's a film you never get tired of?`;
+- Avoid sensitive topics, private data, explicit content, and naming specific people.
+- Each question should be 3-8 words.
+- Keep it inclusive, tasteful, and anonymous.
+- Return only the questions, no quotes and no trailing punctuation.
+Examples: low-key crushing on anyone?||ideal first date vibe?||what text makes you melt?`;
 
-    const { text } = await generateText({ model, prompt });
-    const cleaned = text.trim().replace(/\n/g, " ");
+    function isTransientAiError(error: any): boolean {
+      const status = (error as any)?.status || (error as any)?.response?.status;
+      const code = (error as any)?.code;
+      const name = (error as any)?.name || "";
+      const message = (error as any)?.message || "";
+      if (status && (status === 429 || status >= 500)) return true;
+      if (code && ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENOTFOUND"].includes(code)) return true;
+      if (/RateLimit|Timeout|FetchError|NetworkError/i.test(String(name) + " " + String(message))) return true;
+      return false;
+    }
+
+    async function sleep(ms: number) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    const maxAttempts = 3;
+    const baseDelayMs = 250;
+    let aiOutput: string | null = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const { text } = await generateText({ model, prompt, temperature: 0.7 });
+        aiOutput = String(text || "").trim().replace(/\s+/g, " ");
+        break;
+      } catch (error: any) {
+        if (!isTransientAiError(error)) throw error;
+        console.warn("[suggest-messages] transient AI failure", {
+          model: modelId,
+          attempt,
+          prompt,
+          error: String(error?.message || error),
+        });
+        if (attempt < maxAttempts) await sleep(baseDelayMs * Math.pow(2, attempt - 1));
+      }
+    }
+
+    const cleaned = String(aiOutput || "").trim().replace(/\s+/g, " ");
     if (cleaned.includes("||") && cleaned.length < 500) {
       return NextResponse.json(
         {
@@ -27,10 +63,10 @@ Example: What's a hobby you picked up recently?||What city would you love to exp
     }
 
     const fallbackQuestions = [
-      "what's a hobby you picked up recently?||what city would you love to explore next?||what's a film you never get tired of?",
-      "what small win made your day this week?||if you could learn a skill overnight, what would it be?||what's a comfort food you always enjoy?",
-      "what's a trip you'd love to plan someday?||which book or podcast inspired you lately?||what do you do to recharge?",
-      "what's something new you're trying this month?||if you could chat with any creator, who would it be?||what's a simple joy you look forward to?",
+      "low-key crushing on anyone?||ideal first date vibe?||what text makes you melt?",
+      "what tiny green flag gets you?||how do you flirt low-key?||what makes your heart do zoomies?",
+      "what's your love language rn?||who do you think about lately?||what gives you butterflies fast?",
+      "late-night talk or cute coffee date?||song that reminds you of your crush?||what kind of compliments hit best?",
     ];
 
     const randomQuestions =

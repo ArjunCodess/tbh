@@ -20,11 +20,11 @@ function isStale(
 
 function deterministicFallback(userId: string, now: Date = new Date()): string {
   const fallbacks = [
-    "what made you smile today?",
-    "what small win are you proud of today?",
-    "what energized you today?",
-    "what is one thing you learned today?",
-    "what moment are you grateful for today?",
+    "what tiny thing gives you butterflies?",
+    "what's your love language lately?",
+    "what kind of texts make you melt?",
+    "what first-date vibe do you love?",
+    "what makes you catch feelings fast?",
   ];
   const key = `${userId}-${now.getUTCFullYear()}-${
     now.getUTCMonth() + 1
@@ -35,24 +35,79 @@ function deterministicFallback(userId: string, now: Date = new Date()): string {
   return fallbacks[hash % fallbacks.length];
 }
 
+class TransientAiError extends Error {}
+
+function isTransientAiError(error: any): boolean {
+  const status = (error as any)?.status || (error as any)?.response?.status;
+  const code = (error as any)?.code;
+  const name = (error as any)?.name || "";
+  const message = (error as any)?.message || "";
+  if (status && (status === 429 || status >= 500)) return true;
+  if (
+    code &&
+    ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENOTFOUND"].includes(code)
+  )
+    return true;
+  if (
+    /RateLimit|Timeout|FetchError|NetworkError/i.test(
+      String(name) + " " + String(message)
+    )
+  )
+    return true;
+  return false;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function generatePromptText(): Promise<string> {
-  const model = google("gemini-2.0-flash");
+  const modelId = "gemini-2.0-flash";
+  const model = google(modelId);
   const prompt = [
-    "Generate one short, friendly daily reflection question for a public message board.",
+    "Generate one short, playful Gen-Z style question for a public message board about crushes, love, or feelings.",
     "Constraints:",
-    "- 8 to 16 words",
-    "- avoid sensitive topics and private data",
-    "- neutral, inclusive tone",
-    "- return only the question text, no quotes or punctuation at end",
+    "- 4 to 10 words",
+    "- avoid sensitive topics, private data, explicit content, and naming specific people",
+    "- no age-related content; keep it inclusive and tasteful",
+    "- return only the question text, no quotes and no trailing punctuation",
   ].join("\n");
 
-  const { text } = await generateText({ model, prompt, temperature: 0.7 });
-  const cleaned = String(text || "")
-    .trim()
-    .replace(/\s+/g, " ");
-  const normalized = cleaned.replace(/[.!?]+$/g, "");
-  if (!normalized) throw new Error("empty ai response");
-  return normalized.slice(0, 120);
+  const maxAttempts = 3;
+  const baseDelayMs = 250;
+  let lastError: any = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const { text } = await generateText({ model, prompt, temperature: 0.7 });
+      const cleaned = String(text || "")
+        .trim()
+        .replace(/\s+/g, " ");
+      const normalized = cleaned.replace(/[.!?]+$/g, "");
+      if (!normalized) throw new Error("empty ai response");
+      return normalized.slice(0, 120);
+    } catch (error: any) {
+      lastError = error;
+      if (!isTransientAiError(error)) {
+        throw error;
+      }
+
+      console.warn("[dailyPrompt] transient AI failure", {
+        model: modelId,
+        attempt,
+        prompt,
+        error: String(error?.message || error),
+      });
+      if (attempt < maxAttempts) {
+        const delay = baseDelayMs * Math.pow(2, attempt - 1);
+        await sleep(delay);
+      }
+    }
+  }
+
+  throw new TransientAiError(
+    String(lastError?.message || "AI generation failed after retries")
+  );
 }
 
 export async function ensureDailyPromptFreshForUserId(
@@ -76,11 +131,19 @@ export async function ensureDailyPromptFreshForUserId(
     try {
       text = await generatePromptText();
     } catch (error) {
-      console.error("Failed to generate AI prompt:", error);
-      text = null;
-    }
-    if (!text) {
-      text = deterministicFallback(userId.toHexString(), now);
+      // Only fall back after all transient retries fail. Non-transient errors bubble up.
+      if (error instanceof TransientAiError) {
+        console.warn(
+          "[dailyPrompt] falling back to deterministic after retries",
+          {
+            userId: userId.toHexString(),
+          }
+        );
+        text = deterministicFallback(userId.toHexString(), now);
+      } else {
+        console.error("[dailyPrompt] non-transient AI error", error);
+        throw error;
+      }
     }
 
     try {
@@ -90,7 +153,7 @@ export async function ensureDailyPromptFreshForUserId(
           $set: {
             "dailyPrompt.text": text,
             "dailyPrompt.updatedAt": now,
-            "dailyPrompt.promptVersion": 1,
+            "dailyPrompt.promptVersion": 2,
           },
         }
       ).exec();
@@ -110,9 +173,7 @@ export async function ensureDailyPromptFreshForUserId(
   }
 }
 
-export async function getDailyPromptForUserId(
-  userIdRaw: string
-): Promise<{
+export async function getDailyPromptForUserId(userIdRaw: string): Promise<{
   text: string;
   updatedAt: Date | null;
   promptVersion: number;
