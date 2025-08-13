@@ -33,10 +33,11 @@ export default function ThreadDropdown({
   const currentSlug = searchParams.get("q") || defaultSlug;
 
   React.useEffect(() => {
-    if (!searchParams.get("q")) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("q", defaultSlug);
-      router.replace(`${url.pathname}?${url.searchParams.toString()}`);
+    const currentQ = searchParams.get("q");
+    if (!currentQ) {
+      const params = new URLSearchParams(searchParams);
+      params.set("q", defaultSlug);
+      router.replace(`?${params.toString()}`);
     }
   }, [defaultSlug, router, searchParams]);
 
@@ -55,9 +56,9 @@ export default function ThreadDropdown({
   }, [threads, defaultSlug]);
 
   function handleChange(next: string) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("q", next);
-    router.replace(`${url.pathname}?${url.searchParams.toString()}`);
+    const params = new URLSearchParams(searchParams);
+    params.set("q", next);
+    router.replace(`?${params.toString()}`);
   }
 
   return (

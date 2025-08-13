@@ -4,7 +4,7 @@ import { getServerSession, type Session } from "next-auth";
 import authOptions from "@/app/api/auth/[...nextauth]/options";
 import ThreadModel from "@/lib/models/thread.schema";
 import UserModel from "@/lib/models/user.schema";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import MessageModel from "@/lib/models/message.schema";
 
 interface SessionUser {
@@ -27,21 +27,33 @@ export async function GET(req: NextRequest) {
   const _user = session?.user;
 
   if (!session || !_user)
-    return Response.json(
+    return NextResponse.json(
       { success: false, message: "Not authenticated" },
       { status: 401 }
     );
 
-  const userId = new mongoose.Types.ObjectId(_user._id);
+  const rawUserId = _user?._id ?? _user?.id;
+  if (!rawUserId || !mongoose.isValidObjectId(rawUserId)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid user id" },
+      { status: 400 }
+    );
+  }
 
+  const userId = new mongoose.Types.ObjectId(rawUserId);
   const { searchParams } = new URL(req.url);
   const threadSlug = searchParams.get("threadSlug");
   const threadIdParam = searchParams.get("threadId");
   const filterParam = (searchParams.get("filter") || "unreplied").toLowerCase();
   const filter: "unreplied" | "replied" | "all" =
-    filterParam === "replied" ? "replied" : filterParam === "all" ? "all" : "unreplied";
+    filterParam === "replied"
+      ? "replied"
+      : filterParam === "all"
+      ? "all"
+      : "unreplied";
 
   let targetThreadId: mongoose.Types.ObjectId | null = null;
+
   if (threadIdParam && mongoose.isValidObjectId(threadIdParam)) {
     targetThreadId = new mongoose.Types.ObjectId(threadIdParam);
   } else {
@@ -63,8 +75,8 @@ export async function GET(req: NextRequest) {
       .lean();
 
     if (messages.length > 0) {
-      return Response.json(
-        { messages, success: true, message: 'OK' },
+      return NextResponse.json(
+        { messages, success: true, message: "OK" },
         { status: 200 }
       );
     }
@@ -75,17 +87,21 @@ export async function GET(req: NextRequest) {
       { $match: { _id: userId } },
       { $unwind: "$messages" },
     ];
-    if (targetThreadId) pipeline.push({ $match: { "messages.threadId": targetThreadId } });
+    if (targetThreadId)
+      pipeline.push({ $match: { "messages.threadId": targetThreadId } });
     pipeline.push(
       { $sort: { "messages.createdAt": -1 } },
       { $group: { _id: "$_id", messages: { $push: "$messages" } } }
     );
     const legacy = await UserModel.aggregate(pipeline).exec();
     const legacyMessages = legacy?.[0]?.messages || [];
-    return Response.json({ messages: legacyMessages, success: true, message: 'OK' }, { status: 200 });
+    return NextResponse.json(
+      { messages: legacyMessages, success: true, message: "OK" },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("An unexpected error occurred: ", error);
-    return Response.json(
+    return NextResponse.json(
       { message: "Internal server error", success: false },
       { status: 500 }
     );
