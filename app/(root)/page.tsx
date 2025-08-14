@@ -1,7 +1,12 @@
 import { ArrowDown, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import SparklesText from "@/components/magicui/sparkles-text";
+
+export const metadata: Metadata = {
+  title: "Home",
+};
 
 export default function Hero() {
   return (

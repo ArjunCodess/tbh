@@ -1,4 +1,5 @@
 import DashboardClient from "./DashboardClient";
+import type { Metadata } from "next";
 import connectToDatabase from "@/lib/connectToDatabase";
 import { getServerSession } from "next-auth";
 import authOptions from "@/app/api/auth/[...nextauth]/options";
@@ -7,6 +8,10 @@ import mongoose from "mongoose";
 
 import { ensureDailyPromptFreshForUserId } from "@/lib/services/dailyPrompt";
 import MessageModel from "@/lib/models/message.schema";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
