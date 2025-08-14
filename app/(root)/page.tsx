@@ -1,8 +1,9 @@
-import { ArrowDown, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import SparklesText from "@/components/magicui/sparkles-text";
+import Floating, { FloatingElement } from "@/components/ui/parallax-floating";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -10,22 +11,75 @@ export const metadata: Metadata = {
 
 export default function Hero() {
   return (
-    <main className="bg-neutral-950">
-      <div className="rounded-3xl py-20 sm:py-30 md:py-40 h-[90vh] flex flex-col items-center justify-center text-center bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 mx-3 md:mx-5">
-        <div className="max-w-5xl">
-          <SparklesText
-            text="real friends."
-            className="text-5xl sm:text-7xl md:text-9xl text-white"
-          />
-          <SparklesText
-            text="real fun!"
-            className="text-5xl sm:text-7xl md:text-9xl text-white"
-          />
-        </div>
-        <button className="cursor-default bg-transparent absolute bottom-20 animate-bounce rounded-full border-transparent">
-          <ArrowDown height={30} width={30} />
-        </button>
+    <main className="bg-neutral-950 py-4">
+      <div className="z-50 space-y-4 rounded-3xl py-20 sm:py-30 md:py-40 h-[calc(100vh-90px)] flex flex-col items-center justify-center text-center bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980] mx-3 md:mx-5">
+        <SparklesText
+          text="real questions."
+          className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl text-white"
+        />
+        <SparklesText
+          text="honest answers."
+          className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl text-white"
+        />
       </div>
+
+      <Floating sensitivity={-1} className="overflow-hidden">
+        <FloatingElement depth={0.5} className="top-[28%] left-[21%]">
+          <Image
+            src="/cat.png"
+            alt="cat"
+            width={224}
+            height={224}
+            className="w-56 h-56"
+          />
+        </FloatingElement>
+        <FloatingElement depth={1} className="top-[23%] left-[45%]">
+          <Image
+            src="/laugh.png"
+            alt="laugh"
+            width={160}
+            height={160}
+            className="w-40 h-40"
+          />
+        </FloatingElement>
+        <FloatingElement depth={1} className="top-[26%] left-[72%]">
+          <Image
+            src="/crown.png"
+            alt="crown"
+            width={208}
+            height={208}
+            className="w-52 h-52"
+          />
+        </FloatingElement>
+        <FloatingElement depth={2} className="top-[69%] left-[77%]">
+          <Image
+            src="/hi.png"
+            alt="hi"
+            width={192}
+            height={192}
+            className="w-48 h-48"
+          />
+        </FloatingElement>
+        <FloatingElement depth={1} className="top-[76%] left-[56%]">
+          <Image
+            src="/pizza.png"
+            alt="pizza"
+            width={176}
+            height={176}
+            className="w-44 h-44"
+          />
+        </FloatingElement>
+        <FloatingElement depth={1} className="top-[70%] left-[20%]">
+          <Image
+            src="/skull.png"
+            alt="skull"
+            width={208}
+            height={208}
+            className="w-52 h-52"
+          />
+        </FloatingElement>
+      </Floating>
+
       <div className="py-20 sm:py-30 md:py-40 max-w-5xl mx-auto">
         <div className="m-auto flex h-full w-full flex-col gap-8 px-4 py-4 md:px-6 md:py-10 text-center">
           <h1
