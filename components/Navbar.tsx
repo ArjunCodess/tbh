@@ -13,30 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession, signOut } from "next-auth/react";
 import { LayoutDashboard, LogOut, Settings, ArrowRight } from "lucide-react";
-import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const user = session?.user;
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <header className="w-full border-b border-neutral-200 bg-card">
-        <div className="container mx-auto px-3 sm:px-4 flex h-14 sm:h-16 items-center justify-between">
-          <Link href="/" className="font-bold text-lg sm:text-xl">
-            TBH
-          </Link>
-          <div className="h-8 w-8 rounded-full bg-neutral-200"></div>
-        </div>
-      </header>
-    );
-  }
 
   return (
     <header className="w-full border-b border-neutral-800 bg-neutral-950">
@@ -56,7 +37,7 @@ export default function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-8 w-8 rounded-full p-0"
+                className="relative h-8 w-8 rounded-full p-0 z-10"
               >
                 <Avatar className="h-8 w-8 rounded-full">
                   <AvatarImage
