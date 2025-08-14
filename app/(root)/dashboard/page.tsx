@@ -1,4 +1,4 @@
-import DashboardClient from "./DashboardClient";
+import DashboardClient from "./client";
 import type { Metadata } from "next";
 import connectToDatabase from "@/lib/connectToDatabase";
 import { getServerSession } from "next-auth";
