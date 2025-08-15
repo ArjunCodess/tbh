@@ -38,16 +38,16 @@ const CONFIG: BannerConfig = {
     ],
     images: [
       {
-        src: "/crown.png",
+        src: "/cat.png",
         className: "hidden md:block md:w-28 md:top-[43%] md:left-[6%] rotate-3",
       },
       {
-        src: "/laugh.png",
+        src: "/skull.png",
         className:
           "w-24 top-[15%] right-[12%] md:w-36 md:top-[25%] md:right-[10%] -rotate-6",
       },
       {
-        src: "/skull.png",
+        src: "/laugh.png",
         className:
           "w-20 top-[50%] left-[6%] md:w-24 md:top-[50%] md:left-[45%] rotate-12",
       },
@@ -71,16 +71,16 @@ const CONFIG: BannerConfig = {
     ],
     images: [
       {
-        src: "/skull.png",
+        src: "/pizza.png",
         className:
           "w-20 top-[40%] left-[15%] rotate-12 md:w-28 md:top-[50%] md:left-[15%] -rotate-2",
       },
       {
-        src: "/pizza.png",
+        src: "/crown.png",
         className: "w-16 bottom-[25%] right-[12%] -rotate-6 md:w-24 rotate-6",
       },
       {
-        src: "/laugh.png",
+        src: "/cry.png",
         className: "w-28 top-[25%] right-0 md:w-40 md:top-[20%] -rotate-12",
       },
     ],
@@ -103,7 +103,7 @@ const CONFIG: BannerConfig = {
     ],
     images: [
       {
-        src: "/pizza.png",
+        src: "/cat.png",
         className:
           "w-20 top-[25%] left-[70%] md:w-32 md:top-[25%] md:left-[70%] rotate-4",
       },
@@ -113,7 +113,7 @@ const CONFIG: BannerConfig = {
           "w-16 bottom-[45%] left-[12%] md:bottom-[35%] md:w-24 -rotate-4",
       },
       {
-        src: "/skull.png",
+        src: "/cry.png",
         className:
           "w-20 bottom-[40%] right-[20%] md:bottom-[25%] -rotate-12 rotate-8",
       },
