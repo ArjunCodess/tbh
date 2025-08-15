@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
   return (
-    <div className="space-y-4 rounded-[2rem] md:rounded-[4rem] py-20 sm:py-30 md:py-40 h-[calc(100vh-90px)] flex flex-col items-center justify-center text-center bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980]">
+    <div className="space-y-4 rounded-[2rem] md:rounded-[4rem] py-20 sm:py-30 md:py-40 h-[calc(100vh-260px)] flex flex-col items-center justify-center text-center bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980]">
       <div className="z-0">
         <Floating sensitivity={-0.5} className="overflow-hidden">
           <FloatingElement
@@ -37,7 +37,7 @@ export default function Hero() {
         <Floating sensitivity={-1} className="overflow-hidden">
           <FloatingElement
             depth={1}
-            className="top-[70%] md:top-[59%] left-[30%]"
+            className="top-[70%] md:top-[52%] left-[30%]"
           >
             <motion.img
               initial={{ opacity: 0 }}

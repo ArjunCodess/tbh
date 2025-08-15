@@ -139,7 +139,7 @@ export default function InteractiveHoverQnABanner() {
     setActiveIdx((idx) => (idx === keys.length - 1 ? 0 : idx + 1));
 
   return (
-    <section className="relative w-full text-white overflow-hidden py-16 md:py-30 border border-white/30 rounded-[2rem] md:rounded-[4rem]">
+    <section className="relative w-full text-white overflow-hidden py-16 border border-white/30 rounded-[2rem] md:rounded-[4rem]">
       <div className="relative mx-auto max-w-[90rem] px-4 min-h-[80vh] md:min-h-[60vh] flex flex-col">
         {/* floating images and bubbles */}
         <div className="max-w-4xl mx-auto pointer-events-none absolute inset-0">
