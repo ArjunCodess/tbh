@@ -37,7 +37,7 @@ export default function Hero() {
         <Floating sensitivity={-1} className="overflow-hidden">
           <FloatingElement
             depth={1}
-            className="top-[70%] md:top-[52%] left-[30%]"
+            className="top-[57%] md:top-[52%] left-[30%]"
           >
             <motion.img
               initial={{ opacity: 0 }}
