@@ -1,96 +1,88 @@
-import Image from 'next/image'
-import Link from 'next/link'
-import React from 'react'
+import { Github, Twitter } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
-    return (
-        <footer className='py-14 bg-neutral-900 text-neutral-300 border-neutral-800 border-t'>
-            <div className="container mx-auto px-4 lg:px-6 flex flex-col lg:flex-row items-center justify-between">
-                <div className="flex flex-col lg:max-w-xl">
-                    <Image src='/tbh.png' width={100} height={100} alt="TBH Logo" />
-                    <p className='pt-4 text-base md:text-lg font-extrabold'>Be authentic. Be honest. Be you.</p>
-                    <p className='pt-2 text-sm md:text-base'>TBH is a new way to q&a; the app provides a safe space for users to connect with friends and be their authentic selves.</p>
-                </div>
-                <div className='w-full md:w-fit'>
-                    <p className="mt-4 lg:mt-0 text-sm md:text-base">
-                        Built with ☕ and ♥ by <Link href="https://arjuncodess.vercel.app" className="text-neutral-50 font-semibold underline underline-offset-2">@ArjunCodess</Link>
-                    </p>
-                    <div className="flex items-center justify-start lg:justify-end gap-4 mt-4">
-                        <Link href="https://github.com/arjuncodess/tbh/">
-                            <GithubIcon className="h-6 w-6" />
-                            <span className="sr-only">GitHub</span>
-                        </Link>
-                        <Link href="https://x.com/arjuncodess/">
-                            <TwitterIcon className="h-6 w-6" />
-                            <span className="sr-only">X (Twitter)</span>
-                        </Link>
-                        <Link href="https://instagram.com/arjuncodess/">
-                            <InstagramIcon className="h-6 w-6" />
-                            <span className="sr-only">Instagram</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </footer>
-    )
-}
-
-function GithubIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-            <path d="M9 18c-4.51 2-5-2-7-2" />
-        </svg>
-    )
-}
-
-function InstagramIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-        </svg>
-    )
-}
-
-function TwitterIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-        </svg>
-    )
+  return (
+    <footer className="py-14 bg-neutral-900 text-neutral-300 border-neutral-800 border-t">
+      <div className="container mx-auto px-4 lg:px-6 flex flex-col lg:flex-row items-center justify-between">
+        <div className="flex flex-col lg:max-w-xl">
+          <Image src="/tbh.png" width={100} height={100} alt="TBH Logo" />
+          <p className="pt-4 text-base md:text-lg font-extrabold">
+            Ask bold. Answer real. Try TBH now.
+          </p>
+          <p className="pt-2 text-sm md:text-base">
+            TBH is an anonymous Q&amp;A app where friends can send you
+            questions, you can reply in public or private, make threads, and
+            keep the fun going.
+          </p>
+        </div>
+        <div className="w-full md:w-fit flex flex-col items-end mt-8 lg:mt-0">
+          <nav className="mb-6">
+            <ul className="flex flex-wrap gap-4 text-sm md:text-base font-semibold">
+              <li>
+                <Link
+                  href="/signup"
+                  className="hover:underline underline-offset-2"
+                >
+                  Sign Up
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/signin"
+                  className="hover:underline underline-offset-2"
+                >
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="hover:underline underline-offset-2"
+                >
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/settings"
+                  className="hover:underline underline-offset-2"
+                >
+                  Settings
+                </Link>
+              </li>
+            </ul>
+          </nav>
+          <p className="text-xs md:text-sm text-right">
+            Built with ☕ and ❤️ by
+            <br />
+            <Link
+              href="https://arjuncodess.is-a.dev/"
+              target="_blank"
+              className="text-neutral-50 font-semibold underline underline-offset-2"
+            >
+              @ArjunCodess
+            </Link>
+          </p>
+          <div className="flex items-center gap-6 mt-4">
+            <Link
+              href="https://github.com/arjuncodess/tbh/"
+              target="_blank"
+              className="text-white/80 hover:text-white"
+            >
+              <Github className="h-6 w-6" />
+            </Link>
+            <Link
+              href="https://x.com/arjuncodess/"
+              target="_blank"
+              className="text-white/80 hover:text-white"
+            >
+              <Twitter className="h-6 w-6" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }
