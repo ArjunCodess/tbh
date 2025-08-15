@@ -140,9 +140,9 @@ export default function InteractiveHoverQnABanner() {
 
   return (
     <section className="relative w-full md:w-1/2 text-white overflow-hidden py-16 border border-white/30 rounded-[2rem] md:rounded-[4rem]">
-      <div className="relative mx-auto max-w-[90rem] px-4 min-h-[80vh] md:min-h-[60vh] flex flex-col">
+      <div className="relative mx-auto max-w-[90rem] px-4 min-h-[80vh] md:min-h-[60vh] flex flex-col py-auto">
         {/* floating images and bubbles */}
-        <div className="max-w-4xl mx-auto pointer-events-none absolute inset-0">
+        <div className="max-w-4xl mx-auto py-auto pointer-events-none absolute inset-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={`bubbles-${activeKey}`}
@@ -188,7 +188,7 @@ export default function InteractiveHoverQnABanner() {
         </div>
 
         {/* title */}
-        <h2 className="text-center font-extrabold tracking-tight text-4xl md:text-7xl leading-none mb-8 md:mb-0 z-10">
+        <h2 className="text-center font-extrabold tracking-tight text-4xl md:text-7xl leading-none z-10">
           threads of truth.
         </h2>
 
