@@ -20,36 +20,36 @@ const CONFIG: BannerConfig = {
     label: "ask me anything",
     bubbles: [
       {
-        text: "What's your biggest dream?",
-        className: "top-[25%] left-[4%] md:top-[30%] md:left-[6%]",
+        text: "wyd rn? 👀",
+        className: "top-[20%] left-[4%] md:top-[25%] md:left-[6%]",
       },
       {
-        text: "If you could have any superpower, what would it be?",
-        className: "top-[38%] left-[4%] md:top-[40%] md:left-[6%]",
+        text: "if u could ghost anyone, who & why? 💀",
+        className: "top-[33%] left-[4%] md:top-[35%] md:left-[6%]",
       },
       {
-        text: "Who's your celebrity crush?",
-        className: "top-[55%] right-[4%] md:top-[55%] md:right-[6%]",
+        text: "spill: last time u simped hard? 😳",
+        className: "top-[50%] right-[4%] md:top-[50%] md:right-[6%]",
       },
       {
-        text: "What's your dream job?",
-        className: "top-[68%] right-[4%] md:top-[65%] md:right-[6%]",
+        text: "what's ur most used emoji? drop it! 🫣",
+        className: "top-[63%] right-[4%] md:top-[60%] md:right-[6%]",
       },
     ],
     images: [
       {
         src: "/crown.png",
-        className: "hidden md:block md:w-28 md:top-[48%] md:left-[6%] rotate-3",
+        className: "hidden md:block md:w-28 md:top-[43%] md:left-[6%] rotate-3",
       },
       {
         src: "/laugh.png",
         className:
-          "w-24 top-[20%] right-[12%] md:w-36 md:top-[30%] md:right-[10%] -rotate-6",
+          "w-24 top-[15%] right-[12%] md:w-36 md:top-[25%] md:right-[10%] -rotate-6",
       },
       {
         src: "/skull.png",
         className:
-          "w-20 top-[55%] left-[20%] md:w-24 md:top-[55%] md:left-[45%] rotate-12",
+          "w-20 top-[50%] left-[6%] md:w-24 md:top-[50%] md:left-[45%] rotate-12",
       },
     ],
   },
@@ -57,31 +57,31 @@ const CONFIG: BannerConfig = {
     label: "never have i ever",
     bubbles: [
       {
-        text: "Never have I ever cheated on a test.",
-        className: "top-[20%] left-[5%] md:top-[30%] md:left-[5%]",
+        text: "nhie slid into dms & got left on read 😬",
+        className: "top-[15%] left-[5%] md:top-[25%] md:left-[5%]",
       },
       {
-        text: "Never have I ever skipped class.",
-        className: "top-[38%] left-[5%] md:top-[45%] md:left-[5%]",
+        text: "nhie sent a risky snap & regretted it 😅",
+        className: "top-[33%] left-[5%] md:top-[40%] md:left-[5%]",
       },
       {
-        text: "Never have I ever lied to a friend.",
-        className: "top-[60%] right-[8%] md:top-[55%] md:right-[8%]",
+        text: "nhie stalked my ex's new bae 👀",
+        className: "top-[55%] right-[8%] md:top-[50%] md:right-[8%]",
       },
     ],
     images: [
       {
         src: "/skull.png",
         className:
-          "w-20 top-[45%] left-[15%] rotate-12 md:w-28 md:top-[55%] md:left-[15%] -rotate-2",
+          "w-20 top-[40%] left-[15%] rotate-12 md:w-28 md:top-[50%] md:left-[15%] -rotate-2",
       },
       {
         src: "/pizza.png",
-        className: "w-16 bottom-[20%] right-[12%] -rotate-6 md:w-24 rotate-6",
+        className: "w-16 bottom-[25%] right-[12%] -rotate-6 md:w-24 rotate-6",
       },
       {
         src: "/laugh.png",
-        className: "w-28 top-[30%] right-0 md:w-40 md:top-[25%] -rotate-12",
+        className: "w-28 top-[25%] right-0 md:w-40 md:top-[20%] -rotate-12",
       },
     ],
   },
@@ -89,33 +89,33 @@ const CONFIG: BannerConfig = {
     label: "confessions",
     bubbles: [
       {
-        text: "I still sleep with the lights on.",
-        className: "top-[25%] left-[8%] md:left-[10%]",
+        text: "still bump 1d 🤫",
+        className: "top-[20%] left-[8%] md:left-[10%]",
       },
       {
-        text: "I text and delete a lot.",
-        className: "top-[35%] left-[10%] md:top-[40%]",
+        text: "i fake afk to dodge calls 😅",
+        className: "top-[30%] left-[10%] md:top-[35%]",
       },
       {
-        text: "I have a secret playlist.",
-        className: "top-[65%] right-[10%] md:top-[55%] md:right-[12%]",
+        text: "i've faked bad wifi to leave a group chat 💀",
+        className: "top-[60%] right-[10%] md:top-[50%] md:right-[12%]",
       },
     ],
     images: [
       {
         src: "/pizza.png",
         className:
-          "w-20 top-[30%] left-[60%] md:w-32 md:top-[30%] md:left-[70%] rotate-4",
+          "w-20 top-[25%] left-[70%] md:w-32 md:top-[25%] md:left-[70%] rotate-4",
       },
       {
         src: "/laugh.png",
         className:
-          "w-16 bottom-[40%] left-[12%] md:bottom-[30%] md:w-24 -rotate-4",
+          "w-16 bottom-[45%] left-[12%] md:bottom-[35%] md:w-24 -rotate-4",
       },
       {
         src: "/skull.png",
         className:
-          "w-20 bottom-[35%] right-[20%] md:bottom-[20%] -rotate-12 rotate-8",
+          "w-20 bottom-[40%] right-[20%] md:bottom-[25%] -rotate-12 rotate-8",
       },
     ],
   },
