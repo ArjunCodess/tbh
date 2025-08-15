@@ -6,12 +6,12 @@ import Link from "next/link";
 
 export default function Features() {
   return (
-    <section className="text-white rounded-[2rem] md:rounded-[4rem] bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980] w-full md:w-1/2 flex flex-col justify-center">
-      <div className="mx-auto w-full max-w-4xl px-6">
+    <section className="text-white rounded-[2rem] bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980] w-full md:w-1/2 flex flex-col justify-center">
+      <div className="mx-auto w-full max-w-4xl px-4 md:px-8">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="md:col-span-1">
             <h2 className="text-balance text-4xl font-semibold">
-              Slide into anonymous Q&amp;A, threads, and more
+              Slide into anonymous Q&amp;A, and threads
             </h2>
             <Button className="mt-8 pr-2 text-black" variant="outline" asChild>
               <Link href="/dashboard">
