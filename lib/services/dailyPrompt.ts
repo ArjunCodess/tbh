@@ -84,7 +84,9 @@ export async function ensureDailyPromptFreshForUserId(
           $set: {
             "dailyPrompt.text": text,
             "dailyPrompt.updatedAt": now,
-            "dailyPrompt.promptVersion": 2,
+          },
+          $inc: {
+            "dailyPrompt.promptVersion": 1,
           },
         }
       ).exec();
