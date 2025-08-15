@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
   return (
-    <div className="space-y-4 rounded-[2rem] md:rounded-[4rem] py-20 sm:py-30 md:py-40 h-[calc(100vh-90px)] flex flex-col items-center justify-center text-center bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980] mx-2">
+    <div className="space-y-4 rounded-[2rem] md:rounded-[4rem] py-20 sm:py-30 md:py-40 h-[calc(100vh-90px)] flex flex-col items-center justify-center text-center bg-gradient-to-t from-[#fe831b] via-primary to-[#ed1980]">
       <div className="z-0">
         <Floating sensitivity={-0.5} className="overflow-hidden">
           <FloatingElement
