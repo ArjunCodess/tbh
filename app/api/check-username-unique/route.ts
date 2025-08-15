@@ -1,7 +1,7 @@
-import connectToDatabase from "@/app/lib/connectToDatabase";
-import UserModel from "@/app/lib/models/user.schema";
+import connectToDatabase from "@/lib/connectToDatabase";
+import { isUsernameTakenCI } from "@/lib/userIdentity";
 import { z } from "zod";
-import { usernameValidation } from "@/app/lib/schema/signUpSchema";
+import { usernameValidation } from "@/lib/schema/signUpSchema";
 
 const UsernameQuerySchema = z.object({
      username: usernameValidation,
@@ -28,10 +28,8 @@ export async function GET(request: Request) {
           }
 
           const { username } = result.data;
-
-          const existingUserByUsername = await UserModel.findOne({ username });
-
-          if (existingUserByUsername) return Response.json({ success: false, message: 'Username is already taken' }, { status: 400 });
+          const taken = await isUsernameTakenCI(username);
+          if (taken) return Response.json({ success: false, message: 'Username is already taken' }, { status: 400 });
 
           return Response.json({ success: true, message: 'Username is available' });
      }

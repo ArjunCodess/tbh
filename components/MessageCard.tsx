@@ -1,97 +1,257 @@
-'use client'
+"use client";
 
-import React from 'react';
-import axios, { AxiosError } from 'axios';
-import dayjs from 'dayjs';
-import { X } from 'lucide-react';
+import React from "react";
+import axios from "axios";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { Trash2, Loader2, Share2, Send, Reply } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-     Card,
-     CardHeader,
-     CardTitle
-} from '@/components/ui/card';
-import {
-     AlertDialog,
-     AlertDialogAction,
-     AlertDialogCancel,
-     AlertDialogContent,
-     AlertDialogDescription,
-     AlertDialogFooter,
-     AlertDialogHeader,
-     AlertDialogTitle,
-     AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Button } from './ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { Message } from '@/app/lib/models/message.schema';
-import { apiResponse } from '@/types/apiResponse';
-import Link from 'next/link';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "./ui/button";
+import { toast } from "sonner";
+import type { Message } from "@/lib/models/message.schema";
+import type { apiResponse } from "@/types/apiResponse";
+import { toPng } from "html-to-image";
+
+dayjs.extend(relativeTime);
 
 type MessageCardProps = {
-     message: Message;
-     onMessageDelete: (messageId: string) => void;
+  message: Message;
+  onMessageDelete: (messageId: string) => void;
+  threadTitle?: string;
+  globalFilter?: "unreplied" | "replied" | "all";
+  onMessageMarked?: (id: string, next: boolean) => void;
 };
 
-export default function MessageCard({ message, onMessageDelete }: MessageCardProps) {
-     const { toast } = useToast();
+export default function MessageCard({
+  message,
+  onMessageDelete,
+  threadTitle,
+  onMessageMarked,
+}: MessageCardProps) {
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isSharing, setIsSharing] = React.useState(false);
+  const [isToggling, setIsToggling] = React.useState(false);
 
-     const handleDeleteConfirm = async () => {
-          try {
-               const response = await axios.delete<apiResponse>(
-                    `/api/delete-message/${message._id}`
-               );
+  const handleDeleteConfirm = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await axios.delete<apiResponse>(
+        `/api/delete-message/${message._id}`
+      );
+      toast.success(response.data.message);
+      onMessageDelete(message._id as string);
+    } catch {
+      toast.error("Failed to delete message");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
-               toast({
-                    title: response.data.message,
-               });
+  const handleShareStory = async () => {
+    try {
+      setIsSharing(true);
+      const params = new URLSearchParams();
+      params.set("reply", message.content);
+      if (threadTitle) params.set("thread", threadTitle);
+      const res = await fetch(
+        `/api/reply-image-generation?${params.toString()}`
+      );
+      if (!res.ok) throw new Error(`failed to generate image (${res.status})`);
+      const blob = await res.blob();
 
-               onMessageDelete(message._id as string);
-          }
+      const srcDataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("failed to read image data"));
+        reader.readAsDataURL(blob);
+      });
 
-          catch (error: any) {
-               const axiosError = error as AxiosError<apiResponse>;
+      const img = new Image();
+      img.src = srcDataUrl;
 
-               toast({
-                    title: 'Error',
-                    description: axiosError.response?.data.message ?? 'Failed to delete message',
-                    variant: 'destructive',
-               });
-          }
-     };
+      await new Promise<void>((resolve, reject) => {
+        const onLoad = () => {
+          cleanup();
+          resolve();
+        };
+        const onError = () => {
+          cleanup();
+          reject(new Error("failed to load generated image"));
+        };
+        const cleanup = () => {
+          img.removeEventListener("load", onLoad);
+          img.removeEventListener("error", onError);
+        };
+        img.addEventListener("load", onLoad);
+        img.addEventListener("error", onError);
+      });
 
-     return (
-          <Card className="card-bordered">
-               <CardHeader>
-                    <div className="flex justify-between items-center">
-                         <CardTitle><Link href={`/dashboard/message/${message._id}`}>{message.content}</Link></CardTitle>
-                         <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                   <Button variant='destructive'>
-                                        <X className="w-5 h-5" />
-                                   </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                   <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                             This action cannot be undone. This will permanently delete
-                                             this message.
-                                        </AlertDialogDescription>
-                                   </AlertDialogHeader>
-                                   <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                             Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction className="bg-red-700" onClick={handleDeleteConfirm}>
-                                             Continue
-                                        </AlertDialogAction>
-                                   </AlertDialogFooter>
-                              </AlertDialogContent>
-                         </AlertDialog>
-                    </div>
-                    <div className="text-sm">
-                         {dayjs(message.createdAt).format('MMM D, YYYY h:mm A')}
-                    </div>
-               </CardHeader>
-          </Card>
-     );
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "fixed";
+      wrapper.style.left = "-10000px";
+      wrapper.style.top = "0";
+      wrapper.appendChild(img);
+      document.body.appendChild(wrapper);
+
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      const dataUrl = await toPng(img, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const outBlob = await (await fetch(dataUrl)).blob();
+      const file = new File([outBlob], "tbh-answer.png", { type: "image/png" });
+
+      document.body.removeChild(wrapper);
+      
+      const canShareFiles =
+        typeof navigator !== "undefined" &&
+        "canShare" in navigator &&
+        (navigator as any).canShare?.({ files: [file] });
+
+      if (!canShareFiles) {
+        throw new Error("sharing files is not supported on this device");
+      }
+
+      await navigator.share({
+        title: "Share TBH Answer",
+        text: message.content,
+        files: [file],
+      });
+      // auto-mark as replied on successful share
+      try {
+        setIsToggling(true);
+        await axios.post(`/api/messages/${message._id}/mark-replied`);
+        onMessageMarked?.(message._id as string, true);
+      } catch {
+        // ignore
+      } finally {
+        setIsToggling(false);
+      }
+    } catch (err) {
+      toast.error("Unable to share", {
+        description:
+          err instanceof Error ? err.message : "something went wrong",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const toggleReplied = async () => {
+    if (isToggling) return;
+    try {
+      setIsToggling(true);
+      const next = !(message as any).isReplied;
+      const url = next
+        ? `/api/messages/${message._id}/mark-replied`
+        : `/api/messages/${message._id}/mark-unreplied`;
+      await axios.post(url);
+      onMessageMarked?.(message._id as string, next);
+      toast.success(next ? "Marked replied" : "Marked unreplied");
+    } catch {
+      toast.error("Failed to update");
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  return (
+    <Card className="hover:shadow-lg transition-all duration-200">
+      <CardContent className="flex flex-col h-full">
+        {/* Message */}
+        <p className="text-balance font-medium text-base md:text-lg line-clamp-4 break-words whitespace-pre-wrap">
+          {message.content}
+        </p>
+
+        {/* Bottom bar */}
+        <div className="mt-auto pt-2">
+          {/* Time */}
+          <p className="text-sm text-muted-foreground font-medium">
+            {dayjs(message.createdAt).fromNow()}
+          </p>
+          <div className="flex flex-row items-center gap-2 pt-2 w-full">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleShareStory}
+              disabled={isSharing}
+              className="flex-1 flex items-center justify-center text-sm"
+            >
+              {isSharing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Share2 className="h-4 w-4 mr-2" />
+              )}
+              {isSharing ? "Sharing…" : "Share to Story"}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleReplied}
+              disabled={isToggling}
+              className={`transition ${
+                (message as any).isReplied
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-white text-foreground border-input hover:bg-accent"
+              }`}
+            >
+              {isToggling ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (message as any).isReplied ? (
+                <Send className="h-4 w-4" />
+              ) : (
+                <Reply className="h-4 w-4" />
+              )}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="flex items-center justify-center text-destructive hover:text-destructive hover:bg-destructive/10"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    this message.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-700"
+                    onClick={handleDeleteConfirm}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

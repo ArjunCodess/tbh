@@ -1,6 +1,9 @@
-import connectToDatabase from "@/app/lib/connectToDatabase";
-import UserModel from "@/app/lib/models/user.schema";
+import connectToDatabase from "@/lib/connectToDatabase";
+import UserModel from "@/lib/models/user.schema";
+import { isUsernameTakenCI, findUserByEmailCI } from "@/lib/userIdentity";
 import bcrypt from "bcryptjs";
+import ThreadModel from "@/lib/models/thread.schema";
+import mongoose from "mongoose";
 
 export async function POST(request: Request) {
      await connectToDatabase();
@@ -8,15 +11,15 @@ export async function POST(request: Request) {
      try {
           const { username, email, password } = await request.json();
 
-          const existingUserByUsername = await UserModel.findOne({ username });
+          const usernameTaken = await isUsernameTakenCI(username);
 
-          if (existingUserByUsername) {
+          if (usernameTaken) {
                return Response.json({ success: false, message: "Username is already taken" }, { status: 400 })
           }
 
-          const existingUserByEmail = await UserModel.findOne({ email });
+          const existingUserByEmail = await findUserByEmailCI(email);
 
-          if (existingUserByEmail) {
+           if (existingUserByEmail) {
                const hashedPassword = await bcrypt.hash(password, 10).toString();
                existingUserByEmail.password = hashedPassword;
 
@@ -27,15 +30,24 @@ export async function POST(request: Request) {
                const expiryDate = new Date();
                expiryDate.setHours(expiryDate.getHours() + 1);
 
-               const newUser = new UserModel({
+                const newUser = new UserModel({
                     username,
                     email,
                     password: hashedPassword,
                     isAcceptingMessages: true,
-                    messages: [],
                });
 
-               await newUser.save();
+                 await newUser.save();
+
+                 try {
+                   await ThreadModel.create({
+                     userId: new mongoose.Types.ObjectId(newUser._id as string),
+                     title: "ask me anything",
+                     slug: "ama",
+                   });
+                 } catch {
+                   // ignore duplicate creation errors
+                 }
           }
 
           return Response.json({ success: true, message: "User registered successfully." }, { status: 200 });

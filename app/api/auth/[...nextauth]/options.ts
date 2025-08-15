@@ -1,68 +1,86 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import connectToDatabase from "@/app/lib/connectToDatabase";
-import UserModel from "@/app/lib/models/user.schema";
+import connectToDatabase from "@/lib/connectToDatabase";
+import UserModel from "@/lib/models/user.schema";
+import { ensureDailyPromptFreshForUserId } from "@/lib/services/dailyPrompt";
 
-export const authOptions: NextAuthOptions = {
-     providers: [
-          CredentialsProvider({
-               id: 'credentials',
-               name: 'Credentials',
-               credentials: {
-                    email: { label: 'Email', type: 'text' },
-                    password: { label: 'Password', type: 'password' },
-               },
-               async authorize(credentials: any): Promise<any> {
-                    await connectToDatabase();
-                    try {
-                         const user = await UserModel.findOne({
-                              $or: [
-                                   { email: credentials.identifier },
-                                   { username: credentials.identifier },
-                              ],
-                         });
+const authOptions: NextAuthOptions = {
+  session: { strategy: "jwt" },
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        identifier: { label: "Email or Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.identifier || !credentials?.password) return null;
 
-                         if (!user) throw new Error('No user found with this email');
+        await connectToDatabase();
 
-                         const isPasswordCorrect = await bcrypt.compare(
-                              credentials.password,
-                              user.password
-                         );
+        const user = await UserModel.findOne({
+          $or: [
+            { email: credentials.identifier },
+            { username: credentials.identifier },
+          ],
+        });
 
-                         if (isPasswordCorrect) return user;
-                         else throw new Error('Incorrect password');
-                    }
+        if (!user) return null;
 
-                    catch (error: any) {
-                         new Error(error);
-                    }
-               },
-          }),
-     ],
-     callbacks: {
-          async jwt({ token, user }) {
-               if (user) {
-                    token._id = user._id?.toString(); // Convert ObjectId to string
-                    token.isAcceptingMessages = user.isAcceptingMessages;
-                    token.username = user.username;
-               }
-               return token;
-          },
-          async session({ session, token }) {
-               if (token) {
-                    session.user._id = token._id;
-                    session.user.isAcceptingMessages = token.isAcceptingMessages;
-                    session.user.username = token.username;
-               }
-               return session;
-          },
-     },
-     session: {
-          strategy: 'jwt',
-     },
-     secret: process.env.NEXTAUTH_SECRET,
-     pages: {
-          signIn: '/sign-in',
-     },
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) return null;
+
+        return {
+          id: (user as any)._id.toString(),
+          email: user.email,
+          name: user.username,
+          username: user.username,
+          _id: (user as any)._id.toString(),
+          isAcceptingMessages: user.isAcceptingMessages,
+        } as any;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        (token as any)._id = (user as any)._id ?? (user as any).id;
+        (token as any).username = (user as any).username ?? (user as any).name;
+        (token as any).isAcceptingMessages = (user as any).isAcceptingMessages;
+      }
+      return token as any;
+    },
+    async session({ session, token }) {
+      (session as any).user = {
+        _id: (token as any)._id,
+        email: session.user?.email,
+        username: (token as any).username,
+        isAcceptingMessages: (token as any).isAcceptingMessages,
+      };
+      return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      try {
+        const userId = (user as any)?._id || (user as any)?.id;
+        if (!userId) return;
+        await connectToDatabase();
+        await ensureDailyPromptFreshForUserId(String(userId));
+      } catch (err) {
+        console.error("[events.signIn] failed to refresh daily prompt", err);
+      }
+    },
+  },
+  pages: {
+    signIn: "/sign-in",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
+
+export default authOptions;
