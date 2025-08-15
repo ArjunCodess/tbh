@@ -24,7 +24,7 @@ export default function Features() {
           <div className="space-y-6 col-span-2 md:col-span-1">
             <div className="flex flex-row items-center justify-center gap-2 sm:gap-4">
               <MessageCircleQuestion className="size-5" />
-              <span className="hidden sm:block flex-1 h-px bg-white/60 mx-1" />
+              <span className="block flex-1 h-px bg-white/60 mx-1" />
               <h3 className="text-lg font-semibold whitespace-nowrap">
                 Anonymous Questions
               </h3>
@@ -34,13 +34,13 @@ export default function Features() {
               <h3 className="text-lg font-semibold whitespace-nowrap">
                 Replied Filters &amp; Threads
               </h3>
-              <span className="hidden sm:block flex-1 h-px bg-white/60 mx-1" />
+              <span className="block flex-1 h-px bg-white/60 mx-1" />
               <Filter className="size-5" />
             </div>
 
             <div className="flex flex-row items-center justify-center gap-2 sm:gap-4">
               <Sparkles className="size-5" />
-              <span className="hidden sm:block flex-1 h-px bg-white/60 mx-1" />
+              <span className="block flex-1 h-px bg-white/60 mx-1" />
               <h3 className="text-lg font-semibold whitespace-nowrap">
                 Daily AI Prompts
               </h3>
@@ -50,7 +50,7 @@ export default function Features() {
               <h3 className="text-lg font-semibold whitespace-nowrap">
                 Profile Customisations
               </h3>
-              <span className="hidden sm:block flex-1 h-px bg-white/60 mx-1" />
+              <span className="block flex-1 h-px bg-white/60 mx-1" />
               <User className="size-5" />
             </div>
           </div>
