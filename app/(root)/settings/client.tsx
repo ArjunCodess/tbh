@@ -218,47 +218,43 @@ export default function SettingsClient() {
                 </div>
               </div>
 
-              <div className="grid gap-3">
-                <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
-                  <div>
-                    <div className="mb-1 text-sm font-medium">
-                      Accept anonymous messages
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Turn off to stop receiving new messages via your link.
-                    </p>
+              <div className="flex items-center justify-between gap-2 rounded-xl border bg-card p-4 shadow-sm">
+                <div>
+                  <div className="mb-1 text-sm font-medium">
+                    Accept anonymous messages
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isTogglingAccept && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    )}
-                    <Switch
-                      checked={!!acceptMessages}
-                      onCheckedChange={async (checked) => {
-                        setIsTogglingAccept(true);
-                        try {
-                          const res = await fetch("/api/accept-messages", {
-                            method: "POST",
-                            headers: { "content-type": "application/json" },
-                            body: JSON.stringify({ acceptMessages: checked }),
-                          });
-                          const j = await res.json();
-                          if (!res.ok || !j?.success)
-                            throw new Error(j?.message || "Failed to update");
-                          setAcceptMessages(checked);
-                          toast.success(j?.message || "Updated");
-                        } catch (e: any) {
-                          toast.error(
-                            e?.message || "Failed to update settings"
-                          );
-                        } finally {
-                          setIsTogglingAccept(false);
-                        }
-                      }}
-                      disabled={isTogglingAccept || acceptMessages === null}
-                      aria-label="toggle accepting anonymous messages"
-                    />
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Turn off to stop receiving new messages via your link.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isTogglingAccept && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                  <Switch
+                    checked={!!acceptMessages}
+                    onCheckedChange={async (checked) => {
+                      setIsTogglingAccept(true);
+                      try {
+                        const res = await fetch("/api/accept-messages", {
+                          method: "POST",
+                          headers: { "content-type": "application/json" },
+                          body: JSON.stringify({ acceptMessages: checked }),
+                        });
+                        const j = await res.json();
+                        if (!res.ok || !j?.success)
+                          throw new Error(j?.message || "Failed to update");
+                        setAcceptMessages(checked);
+                        toast.success(j?.message || "Updated");
+                      } catch (e: any) {
+                        toast.error(e?.message || "Failed to update settings");
+                      } finally {
+                        setIsTogglingAccept(false);
+                      }
+                    }}
+                    disabled={isTogglingAccept || acceptMessages === null}
+                    aria-label="toggle accepting anonymous messages"
+                  />
                 </div>
               </div>
             </div>
