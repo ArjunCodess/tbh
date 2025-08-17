@@ -8,6 +8,7 @@ export interface User extends Document {
   displayName?: string;
   profileColor?: string;
   textColor?: string;
+  replyCount?: number;
   dailyPrompt?: {
     text: string;
     updatedAt: Date | null;
@@ -57,6 +58,11 @@ const UserSchema: Schema<User> = new mongoose.Schema(
         validator: (v: string) => /^#(?:[0-9a-fA-F]{6})$/.test(v),
         message: 'text color must be a 6-digit hex like #RRGGBB',
       },
+    },
+    replyCount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     dailyPrompt: {
       text: { type: String, default: '' },
