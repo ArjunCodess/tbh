@@ -9,6 +9,7 @@ export interface User extends Document {
   profileColor?: string;
   textColor?: string;
   replyCount?: number;
+  totalMessagesReceived?: number;
   dailyPrompt?: {
     text: string;
     updatedAt: Date | null;
@@ -60,6 +61,11 @@ const UserSchema: Schema<User> = new mongoose.Schema(
       },
     },
     replyCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalMessagesReceived: {
       type: Number,
       default: 0,
       min: 0,
