@@ -16,7 +16,15 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    const user = await UserModel.findById(session.user._id).lean();
+    const user = await UserModel.findById(session.user._id, {
+      username: 1,
+      displayName: 1,
+      profileColor: 1,
+      textColor: 1,
+      replyCount: 1,
+      totalMessagesReceived: 1,
+      isAcceptingMessages: 1,
+    }).lean();
 
     if (!user) {
       return Response.json(
