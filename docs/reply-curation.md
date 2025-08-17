@@ -1,61 +1,53 @@
-# Reply Curation Feature
+# Reply Curation - Implementation Spec
 
 ## Goal
-Allow users to selectively display received replies on their public profile, giving them control over which content represents them best.
+Allow users to reply to messages they receive and choose which replies appear on their public profile.
 
-## Backend (MongoDB)
+## Database Changes
+Extend the existing message schema with three simple fields:
 
-### Option 1: Add a `visible` flag to replies
-- **Pros**: Simple implementation, just add a boolean field to existing message schema
-- **Cons**: Requires filtering on query time, might be less efficient at scale
+- `hasReply` (Boolean, default: false) - Indicates if the user has replied to this message
+- `replyContent` (String, optional) - Stores the text of the user's reply
+- `isPublicOnProfile` (Boolean, default: false) - Controls if this message+reply appears on the user's profile
 
-### Option 2: Create a separate `curatedReplies` array on user document
-- **Pros**: Faster reads for profile display, pre-filtered collection
-- **Cons**: Requires maintaining two sources of truth, potential for data inconsistency
+## Backend Implementation
 
-### Recommendation
-Implement Option 1 with a `visible` boolean flag (defaulting to `false`) on the message schema. This approach:
-- Maintains data integrity with a single source of truth
-- Simplifies writes (just toggle a flag)
-- Can be optimized later with indexes if query performance becomes an issue
-- Allows for easy filtering in the API layer
+### Endpoints
 
-## Frontend
+1. **Create Reply**
+   - `POST /api/messages/:messageId/reply`
+   - Body: `{ replyContent: string }`
+   - Updates the original message with reply content and sets hasReply=true
 
-### Dashboard Integration
-- Add a simple toggle switch labeled "Show on profile" next to each received reply
-- Include a count of currently featured replies ("Featuring 5 replies")
-- Consider a visual indicator for replies that are currently featured
+2. **Toggle Profile Visibility**
+   - `PUT /api/messages/:messageId/visibility`
+   - Body: `{ isPublicOnProfile: boolean }`
+   - Updates the isPublicOnProfile flag on the message
 
-### Profile Display (/u/[username])
-- Create a dedicated "Featured Replies" section on the profile
-- Display curated replies in a grid or list format
-- Include empty state with prompt when no replies are curated
-- Consider a subtle badge or highlight effect for featured replies
+## Frontend Implementation
 
-## User Experience
-- One-tap curation: Simple toggle to feature/unfeature a reply
-- No limit on number of curated replies initially (monitor usage patterns)
-- Default all replies to not featured, requiring explicit curation
-- Allow batch curation options if usage data shows demand
-- Provide visual feedback when a reply is curated (subtle animation)
+### Inbox View
+- Add reply button/form below each received message
+- When user submits reply, update UI to show the reply below the original message
+- Add toggle switch for "Show on profile" next to each replied message
 
-## Virality
+### Profile View
+- In user profile, show section for "My Replies"
+- Only display message+reply pairs where:
+  1. hasReply = true
+  2. isPublicOnProfile = true
+- Display original message followed by the user's reply
 
-### Sharing Incentives
-- Add "Share my profile" button next to curated replies section
-- Generate shareable preview cards for social media with reply count
-- Create unique URLs for individual featured replies (e.g., /u/username/featured/123)
+## Implementation Steps
 
-### Visitor Engagement
-- Show a count of featured replies on profile ("See 12 featured replies")
-- Add subtle "New" indicator for recently added featured replies
-- Consider gamification elements ("First Reply Featured" achievement)
-- Prompt visitors to send messages that might be featured ("Send a reply that could be featured")
+1. Update message schema with the three new fields
+2. Implement the two backend endpoints
+3. Add reply UI to inbox view
+4. Add visibility toggle to replied messages
+5. Update profile view to show curated replies
 
-## Implementation Priority
-1. Add `visible` field to message schema
-2. Update API endpoints to support toggling visibility
-3. Implement dashboard UI for curation
-4. Create featured replies section on profile page
-5. Add sharing and virality features
+## Validation Rules
+
+- Only message recipients can reply to messages
+- Only reply creators can toggle visibility
+- Empty replies are not allowed
