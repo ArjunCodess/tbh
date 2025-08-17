@@ -484,7 +484,7 @@ export default function DashboardClient({
           <CardContent>
             <div className="flex flex-col md:flex-row text-center items-center justify-between gap-3">
               <Badge className="uppercase text-sm">Daily Prompt</Badge>
-              <p className="text-base leading-relaxed">{dailyPrompt}</p>
+              <p className="text-base leading-relaxed text-balance">{dailyPrompt}</p>
               <Button
                 variant="outline"
                 size="sm"
