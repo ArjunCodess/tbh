@@ -3,6 +3,7 @@ import MessageModel, { Message } from "@/lib/models/message.schema";
 import { findUserByUsernameCI } from "@/lib/userIdentity";
 import ThreadModel from "@/lib/models/thread.schema";
 import mongoose from "mongoose";
+import UserModel from "@/lib/models/user.schema";
 
 export async function POST(request: Request) {
   await connectToDatabase();
@@ -73,6 +74,11 @@ export async function POST(request: Request) {
 
     try {
       await MessageModel.create(newMessage);
+      
+      await UserModel.updateOne(
+        { _id: userId },
+        { $inc: { totalMessagesReceived: 1 } }
+      );
     } catch (error) {
       console.error("Error creating message:", error);
       return Response.json(
