@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import ColorField from "@/components/ColorField";
+import ReplyMilestones from "@/components/ReplyMilestones";
 
 export default function SettingsClient() {
   const [displayName, setDisplayName] = useState("");
@@ -21,12 +22,14 @@ export default function SettingsClient() {
     "Idle" | "Checking" | "Available" | "Taken" | "Invalid" | "Unchanged"
   >("Idle");
   const [originalUsername, setOriginalUsername] = useState("");
+  const [userData, setUserData] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/me", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         const u = data?.user || {};
+        setUserData(u);
         setDisplayName(
           typeof u.displayName === "string"
             ? u.displayName
@@ -42,6 +45,7 @@ export default function SettingsClient() {
           typeof u.profileColor === "string" ? u.profileColor : null
         );
         setTextColor(typeof u.textColor === "string" ? u.textColor : null);
+        setAcceptMessages(typeof u.isAcceptingMessages === "boolean" ? u.isAcceptingMessages : null);
       })
       .catch((error) => {
         console.error("Failed to fetch user data:", error);
@@ -182,6 +186,25 @@ export default function SettingsClient() {
                   onChange={setTextColor}
                 />
               </div>
+              
+              {userData && (
+                <div className="grid gap-3">
+                  <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
+                    <div>
+                      <div className="mb-1 text-sm font-medium">
+                        Reply Milestones
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        You&apos;ve replied to {userData.replyCount} messages
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {userData && <ReplyMilestones user={userData} />}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid gap-3">
                 <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
                   <div>

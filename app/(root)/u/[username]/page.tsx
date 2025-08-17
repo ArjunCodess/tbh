@@ -1,5 +1,6 @@
 import MessageForm from "@/components/MessageForm";
 import ThreadDropdown from "@/components/ThreadDropdown";
+import ReplyMilestones from "@/components/ReplyMilestones";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import connectToDatabase from "@/lib/connectToDatabase";
@@ -66,14 +67,18 @@ export default async function Page({
     >
       <div className="w-full">
         <div className="mx-auto max-w-2xl px-4 py-10 md:py-14 text-center">
-          <h1
-            className="text-2xl md:text-3xl font-semibold"
-            style={{ color: textColor }}
-          >
-            {display}
-          </h1>
+          <div className="flex items-center justify-center mt-1">
+            <h1
+              className="text-2xl md:text-3xl font-semibold flex flex-row gap-2"
+              style={{ color: textColor }}
+            >
+              {user && <ReplyMilestones user={user} />}
+              {display}
+              {user && <ReplyMilestones user={user} />}
+            </h1>
+          </div>
           <p
-            className="mt-1 text-sm md:text-base opacity-80"
+            className="text-sm md:text-base opacity-80"
             style={{ color: textColor }}
           >
             @{username}
