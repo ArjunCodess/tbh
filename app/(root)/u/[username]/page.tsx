@@ -67,6 +67,13 @@ export default async function Page({
     >
       <div className="w-full">
         <div className="mx-auto max-w-2xl px-4 py-10 md:py-14 text-center">
+          {user &&
+            user?.totalMessagesReceived &&
+            user.totalMessagesReceived > 0 && (
+              <div className="text-sm opacity-80" style={{ color: textColor }}>
+                <ReplyMilestones user={user} showPercentage={true} />
+              </div>
+            )}
           <div className="flex items-center justify-center mt-1">
             <h1
               className="text-2xl md:text-3xl font-semibold flex flex-row gap-2"
