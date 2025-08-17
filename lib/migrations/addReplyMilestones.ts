@@ -6,11 +6,13 @@ import MessageModel from '../models/message.schema';
 export async function addReplyMilestones(): Promise<{
   usersProcessed: number;
   usersUpdated: number;
+  totalMessagesUpdated: number;
 }> {
   await connectToDatabase();
 
   let usersProcessed = 0;
   let usersUpdated = 0;
+  let totalMessagesUpdated = 0;
 
   // Get all users
   const users = await UserModel.find({});
@@ -24,15 +26,28 @@ export async function addReplyMilestones(): Promise<{
       isReplied: true
     });
     
-    // Update user's replyCount if it's different from the current count
-    if (user.replyCount !== repliedCount) {
+    // Count total messages received by this user
+    const totalMessages = await MessageModel.countDocuments({
+      userId: user._id
+    });
+    
+    // Update user's replyCount and totalMessagesReceived if they're different from the current counts
+    if (user.replyCount !== repliedCount || user.totalMessagesReceived !== totalMessages) {
       await UserModel.updateOne(
         { _id: user._id },
-        { $set: { replyCount: repliedCount } }
+        { $set: { 
+            replyCount: repliedCount,
+            totalMessagesReceived: totalMessages 
+          } 
+        }
       );
       usersUpdated++;
+      
+      if (user.totalMessagesReceived !== totalMessages) {
+        totalMessagesUpdated++;
+      }
     }
   }
 
-  return { usersProcessed, usersUpdated };
+  return { usersProcessed, usersUpdated, totalMessagesUpdated };
 }

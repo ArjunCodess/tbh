@@ -12,6 +12,7 @@ async function main() {
     console.log('Migration completed successfully!');
     console.log(`Users processed: ${result.usersProcessed}`);
     console.log(`Users updated: ${result.usersUpdated}`);
+    console.log(`Users with totalMessagesReceived updated: ${result.totalMessagesUpdated}`);
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
