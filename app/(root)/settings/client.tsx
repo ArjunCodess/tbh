@@ -45,7 +45,11 @@ export default function SettingsClient() {
           typeof u.profileColor === "string" ? u.profileColor : null
         );
         setTextColor(typeof u.textColor === "string" ? u.textColor : null);
-        setAcceptMessages(typeof u.isAcceptingMessages === "boolean" ? u.isAcceptingMessages : null);
+        setAcceptMessages(
+          typeof u.isAcceptingMessages === "boolean"
+            ? u.isAcceptingMessages
+            : null
+        );
       })
       .catch((error) => {
         console.error("Failed to fetch user data:", error);
@@ -186,25 +190,34 @@ export default function SettingsClient() {
                   onChange={setTextColor}
                 />
               </div>
-              
-              {userData && (
-                <div className="grid gap-3">
-                  <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
-                    <div>
-                      <div className="mb-1 text-sm font-medium">
-                        Reply Milestones
+
+              <div className="grid gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl border bg-card p-4 shadow-sm gap-3">
+                  <div className="flex flex-row items-center gap-2">
+                    <div className="text-sm font-medium">Reply Milestones</div>
+                    <ReplyMilestones user={userData} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {userData && userData.totalMessagesReceived > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        <span>
+                          {userData.replyCount || 0} replies •{" "}
+                          {userData.totalMessagesReceived} messages •{" "}
+                          {userData.totalMessagesReceived > 0
+                            ? Math.round(
+                                ((userData.replyCount || 0) /
+                                  userData.totalMessagesReceived) *
+                                  100
+                              )
+                            : 0}
+                          % reply rate
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        You&apos;ve replied to {userData.replyCount} messages
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {userData && <ReplyMilestones user={userData} />}
-                    </div>
+                    )}
                   </div>
                 </div>
-              )}
-              
+              </div>
+
               <div className="grid gap-3">
                 <div className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
                   <div>
