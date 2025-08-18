@@ -8,6 +8,7 @@ export interface User extends Document {
   displayName?: string;
   profileColor?: string;
   textColor?: string;
+  profileQuote?: string;
   replyCount?: number;
   totalMessagesReceived?: number;
   dailyPrompt?: {
@@ -59,6 +60,12 @@ const UserSchema: Schema<User> = new mongoose.Schema(
         validator: (v: string) => /^#(?:[0-9a-fA-F]{6})$/.test(v),
         message: 'text color must be a 6-digit hex like #RRGGBB',
       },
+    },
+    profileQuote: {
+      type: String,
+      trim: true,
+      maxlength: [150, 'profile quote must be <= 150 characters'],
+      default: '',
     },
     replyCount: {
       type: Number,
