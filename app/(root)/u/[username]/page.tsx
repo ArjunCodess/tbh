@@ -90,6 +90,14 @@ export default async function Page({
           >
             @{username}
           </p>
+          {user && (user as any)?.profileQuote && (
+            <p
+              className="text-sm md:text-base mt-2 italic"
+              style={{ color: textColor }}
+            >
+              {(user as any).profileQuote}
+            </p>
+          )}
         </div>
         <div className="mx-auto w-full max-w-2xl px-4">
           <section className="-mt-6 rounded-lg border bg-card text-card-foreground shadow-sm">
