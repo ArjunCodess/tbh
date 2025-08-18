@@ -15,4 +15,5 @@ export const profileCustomisationsSchema = z.object({
   displayName: z.string().min(1).max(50).optional(),
   profileColor: colorHexValidation.optional(),
   textColor: colorHexValidation.optional(),
+  profileQuote: z.string().max(150).optional(),
 });

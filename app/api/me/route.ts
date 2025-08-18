@@ -21,6 +21,7 @@ export async function GET() {
       displayName: 1,
       profileColor: 1,
       textColor: 1,
+      profileQuote: 1,
       replyCount: 1,
       totalMessagesReceived: 1,
       isAcceptingMessages: 1,

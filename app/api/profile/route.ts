@@ -44,6 +44,7 @@ export async function PATCH(req: Request) {
     update.displayName = data.displayName.trim();
   if (data.profileColor !== undefined) update.profileColor = data.profileColor;
   if (data.textColor !== undefined) update.textColor = data.textColor;
+  if (data.profileQuote !== undefined) update.profileQuote = data.profileQuote.trim();
 
   if (data.username !== undefined) {
     const next = data.username.toLowerCase();
