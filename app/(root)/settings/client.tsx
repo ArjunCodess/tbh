@@ -16,6 +16,7 @@ export default function SettingsClient() {
   const [username, setUsername] = useState("");
   const [profileColor, setProfileColor] = useState<string | null>(null);
   const [textColor, setTextColor] = useState<string | null>(null);
+  const [profileQuote, setProfileQuote] = useState("");
   const [acceptMessages, setAcceptMessages] = useState<boolean | null>(null);
   const [isTogglingAccept, setIsTogglingAccept] = useState(false);
   const [usernameCheck, setUsernameCheck] = useState<
@@ -45,6 +46,7 @@ export default function SettingsClient() {
           typeof u.profileColor === "string" ? u.profileColor : null
         );
         setTextColor(typeof u.textColor === "string" ? u.textColor : null);
+        setProfileQuote(typeof u.profileQuote === "string" ? u.profileQuote : "");
         setAcceptMessages(
           typeof u.isAcceptingMessages === "boolean"
             ? u.isAcceptingMessages
@@ -113,6 +115,7 @@ export default function SettingsClient() {
       username: username.trim().toLowerCase(),
       ...(profileColor ? { profileColor } : {}),
       ...(textColor ? { textColor } : {}),
+      profileQuote: profileQuote.trim(),
     };
     const res = await fetch("/api/profile", {
       method: "PATCH",
@@ -128,7 +131,7 @@ export default function SettingsClient() {
     if (payload.username && payload.username !== originalUsername) {
       setOriginalUsername(payload.username);
     }
-  }, [displayName, username, profileColor, textColor, originalUsername]);
+  }, [displayName, username, profileColor, textColor, profileQuote, originalUsername]);
 
   return (
     <main className="min-h-[calc(100vh-60px)] w-full px-4 py-8 md:py-12">
@@ -189,6 +192,20 @@ export default function SettingsClient() {
                   value={textColor}
                   onChange={setTextColor}
                 />
+              </div>
+              
+              <div className="grid gap-3">
+                <Label htmlFor="profileQuote">Profile Quote</Label>
+                <Input
+                  id="profileQuote"
+                  value={profileQuote ?? ""}
+                  onChange={(e) => setProfileQuote(e.target.value)}
+                  placeholder="Add a short quote to your profile (max 150 characters)"
+                  maxLength={150}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {profileQuote.length}/150 characters
+                </p>
               </div>
 
               <div className="grid gap-3">
