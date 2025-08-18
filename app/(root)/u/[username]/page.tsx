@@ -95,7 +95,7 @@ export default async function Page({
               className="text-sm md:text-base mt-2 italic"
               style={{ color: textColor }}
             >
-              {(user as any).profileQuote}
+              ❝{(user as any).profileQuote}❞
             </p>
           )}
         </div>
