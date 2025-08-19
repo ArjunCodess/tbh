@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import connectToDatabase from "@/lib/connectToDatabase";
 import { findUserByUsernameCI } from "@/lib/userIdentity";
 import ThreadModel from "@/lib/models/thread.schema";
+import { notFound } from "next/navigation";
 
 export async function generateMetadata({
   params,
@@ -30,6 +31,9 @@ export default async function Page({
   const { q } = (searchParams ? await searchParams : {}) as { q?: string };
   await connectToDatabase();
   const user = await findUserByUsernameCI(username);
+  if (!user?._id) {
+    return notFound();
+  }
   let threads: { title: string; slug: string }[] = [];
   if (user?._id) {
     const items = await ThreadModel.find(
@@ -47,8 +51,6 @@ export default async function Page({
     const ama = plain.find((t) => t.slug === "ama");
     const rest = plain.filter((t) => t.slug !== "ama");
     threads = ama ? [ama, ...rest] : rest;
-  } else {
-    threads = [{ title: "ask me anything", slug: "ama" }];
   }
   const selectedThreadSlug =
     (q && threads.some((t) => t.slug === q) ? q : undefined) ??
