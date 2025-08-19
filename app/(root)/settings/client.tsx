@@ -19,6 +19,7 @@ export default function SettingsClient() {
   const [profileQuote, setProfileQuote] = useState("");
   const [acceptMessages, setAcceptMessages] = useState<boolean | null>(null);
   const [isTogglingAccept, setIsTogglingAccept] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [usernameCheck, setUsernameCheck] = useState<
     "Idle" | "Checking" | "Available" | "Taken" | "Invalid" | "Unchanged"
   >("Idle");
@@ -46,7 +47,9 @@ export default function SettingsClient() {
           typeof u.profileColor === "string" ? u.profileColor : null
         );
         setTextColor(typeof u.textColor === "string" ? u.textColor : null);
-        setProfileQuote(typeof u.profileQuote === "string" ? u.profileQuote : "");
+        setProfileQuote(
+          typeof u.profileQuote === "string" ? u.profileQuote : ""
+        );
         setAcceptMessages(
           typeof u.isAcceptingMessages === "boolean"
             ? u.isAcceptingMessages
@@ -110,13 +113,62 @@ export default function SettingsClient() {
   }, [username, originalUsername]);
 
   const onSave = useCallback(async () => {
-    const payload: any = {
-      displayName,
-      username: username.trim().toLowerCase(),
-      ...(profileColor ? { profileColor } : {}),
-      ...(textColor ? { textColor } : {}),
-      profileQuote: profileQuote.trim(),
+    const errors: string[] = [];
+    const sanitizePlainText = (input: string, maxLen: number) => {
+      const trimmed = String(input || "")
+        .trim()
+        .slice(0, maxLen);
+      return trimmed.replace(
+        /[<>"'&/]/g,
+        (ch) =>
+          ((
+            {
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+              "&": "&amp;",
+              "/": "&#x2F;",
+            } as any
+          )[ch])
+      );
     };
+    const usernameNormalized = String(username || "")
+      .trim()
+      .toLowerCase();
+    if (!usernameNormalized) {
+      errors.push("username is required");
+    } else if (!/^[a-z0-9_]{1,20}$/.test(usernameNormalized)) {
+      errors.push(
+        "username must be 1-20 chars: lowercase letters, numbers, underscore"
+      );
+    }
+    const displayNameSanitized = sanitizePlainText(displayName, 50);
+    if (!displayNameSanitized) {
+      errors.push("display name is required");
+    }
+    const quoteSanitized = sanitizePlainText(profileQuote, 150);
+    const colorHexRe = /^#(?:[0-9a-f]{6})$/i;
+    const payload: any = {};
+    if (!errors.length) {
+      payload.username = usernameNormalized;
+    }
+    if (displayNameSanitized) payload.displayName = displayNameSanitized;
+    if (quoteSanitized || profileQuote.trim() === "")
+      payload.profileQuote = quoteSanitized;
+    if (profileColor) {
+      if (colorHexRe.test(profileColor)) payload.profileColor = profileColor;
+      else errors.push("profile color must be a hex like #RRGGBB");
+    }
+    if (textColor) {
+      if (colorHexRe.test(textColor)) payload.textColor = textColor;
+      else errors.push("text color must be a hex like #RRGGBB");
+    }
+    if (errors.length) {
+      toast.error(errors[0]);
+      return;
+    }
+    setIsSaving(true);
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
@@ -135,8 +187,17 @@ export default function SettingsClient() {
     } catch (error) {
       console.error("Save failed:", error);
       toast.error("Network error: Failed to save profile");
+    } finally {
+      setIsSaving(false);
     }
-  }, [displayName, username, profileColor, textColor, profileQuote, originalUsername]);
+  }, [
+    displayName,
+    username,
+    profileColor,
+    textColor,
+    profileQuote,
+    originalUsername,
+  ]);
 
   return (
     <main className="min-h-[calc(100vh-60px)] w-full px-4 py-8 md:py-12">
@@ -286,10 +347,19 @@ export default function SettingsClient() {
                 className="w-full"
                 onClick={onSave}
                 disabled={
-                  usernameCheck === "Taken" || usernameCheck === "Invalid"
+                  isSaving ||
+                  usernameCheck === "Taken" ||
+                  usernameCheck === "Invalid"
                 }
               >
-                Save Changes
+                {isSaving ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </div>

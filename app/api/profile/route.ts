@@ -25,7 +25,17 @@ export async function PATCH(req: Request) {
   
   const userId = session.user._id;
 
-  const body = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch (err) {
+    console.error('Failed to parse JSON for /api/profile PATCH:', err);
+    return new Response(JSON.stringify({ success: false, message: 'Invalid JSON' }), {
+      status: 400,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  
   const parsed = profileCustomisationsSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
