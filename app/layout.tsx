@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     default: "TBH",
   },
   description:
-    "Be authentic. Be honest. Be you. TBH is a new way to q&a; the app provides a safe space for users to connect with friends and be their authentic selves.",
+    "TBH is an anonymous QnA app where friends can send you questions, you can reply in public, make threads, and keep the fun going.",
 };
 
 export default function RootLayout({
@@ -31,7 +31,7 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Footer />
-          
+
           <Toaster />
 
           <Analytics />
