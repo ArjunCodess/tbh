@@ -44,7 +44,8 @@ export async function PATCH(req: Request) {
     update.displayName = data.displayName.trim();
   if (data.profileColor !== undefined) update.profileColor = data.profileColor;
   if (data.textColor !== undefined) update.textColor = data.textColor;
-  if (data.profileQuote !== undefined) update.profileQuote = data.profileQuote.trim();
+  if (data.profileQuote !== undefined)
+    update.profileQuote = data.profileQuote.trim();
 
   if (data.username !== undefined) {
     const next = data.username.toLowerCase();
@@ -66,13 +67,27 @@ export async function PATCH(req: Request) {
       // Any duplicate‐key error will be handled in the update below.
     }
   }
-
   try {
     const saved = await UserModel.findByIdAndUpdate(
       userId,
       { $set: update },
-      { new: true }
-    );
+      {
+        new: true,
+        runValidators: true,
+        projection: {
+          username: 1,
+          displayName: 1,
+          profileColor: 1,
+          textColor: 1,
+        },
+      }
+    ).lean();
+    if (!saved) {
+      return Response.json(
+        { success: false, message: "user not found" },
+        { status: 404 }
+      );
+    }
     return Response.json({ success: true, user: saved });
   } catch (error: any) {
     if (error.code === 11000 && error.keyPattern?.username) {

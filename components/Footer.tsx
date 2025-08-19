@@ -69,16 +69,20 @@ export default function Footer() {
             <Link
               href="https://github.com/arjuncodess/tbh/"
               target="_blank"
+              rel="noopener noreferrer"
               className="text-white/80 hover:text-white"
+              aria-label="GitHub, opens in new tab"
             >
-              <Github className="h-6 w-6" />
+              <Github className="h-6 w-6" aria-hidden="true" />
             </Link>
             <Link
               href="https://x.com/arjuncodess/"
               target="_blank"
+              rel="noopener noreferrer"
               className="text-white/80 hover:text-white"
+              aria-label="Twitter, opens in new tab"
             >
-              <Twitter className="h-6 w-6" />
+              <Twitter className="h-6 w-6" aria-hidden="true" />
             </Link>
           </div>
         </div>

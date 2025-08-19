@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   const filter: 'unreplied' | 'replied' | 'all' =
     filterParam === 'replied' ? 'replied' : filterParam === 'all' ? 'all' : 'unreplied';
 
-  const threadCriteria: any = { userId };
+  const threadCriteria: any = { userId: new mongoose.Types.ObjectId(userId) };
 
   const items = await ThreadModel.find(threadCriteria, null, { lean: true })
     .sort({ createdAt: -1 })
@@ -119,7 +119,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    const res = await ThreadModel.deleteOne({ userId: new mongoose.Types.ObjectId(user._id), slug });
+    const res = await ThreadModel.deleteOne({ userId: user._id, slug });
     if (res.deletedCount === 0) {
       return Response.json({ success: false, message: 'thread not found' }, { status: 404 });
     }
