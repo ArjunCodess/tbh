@@ -16,10 +16,9 @@ export default async function connectToDatabase(): Promise<void> {
     return;
   }
 
-  if (Number(mongoose.connection.readyState) === 2 && connection.connectionPromise) {
+  if (connection.connectionPromise) {
     await connection.connectionPromise;
-    const currentReadyState = Number(mongoose.connection.readyState);
-    connection.isConnected = currentReadyState === 1;
+    connection.isConnected = mongoose.connection.readyState === 1;
     return;
   }
 
@@ -37,7 +36,10 @@ export default async function connectToDatabase(): Promise<void> {
     }
   } catch (error) {
     connection.isConnected = false;
-    console.error("Failed to connect to database.", error);
+    if (process.env.NODE_ENV !== "production") {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Failed to connect to database.", message);
+    }
     throw error;
   } finally {
     connection.connectionPromise = undefined;

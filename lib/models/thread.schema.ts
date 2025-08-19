@@ -22,9 +22,13 @@ const ThreadSchema: Schema<Thread> = new mongoose.Schema(
   { timestamps: true }
 );
 
-ThreadSchema.pre("save", function (next) {
-  if (this.isModified("slug") && typeof (this as any).slug === "string") {
-    (this as any).slug = (this as any).slug
+// Remove the post-validation hook
+// ThreadSchema.pre("save", function (next) {...}
+
+// Add pre-validate hook to normalize slug before validation
+ThreadSchema.pre("validate", function(this: Thread, next) {
+  if (this.isModified("slug") && typeof this.slug === "string") {
+    this.slug = this.slug
       .toLowerCase()
       .trim()
       .replace(/\s+/g, "-")

@@ -1,7 +1,11 @@
 import connectToDatabase from "@/lib/connectToDatabase";
 import UserModel from "@/lib/models/user.schema";
 import mongoose from "mongoose";
-import { normalizeSingleLine, generateWithRetry, TransientAIError } from "@/lib/ai/generation";
+import {
+  normalizeSingleLine,
+  generateWithRetry,
+  TransientAIError,
+} from "@/lib/ai/generation";
 import { DAILY_PROMPT_TEMPLATE, GENZ_FALLBACK_DAILY } from "@/lib/ai/prompts";
 
 const inFlightByUser: Map<string, Promise<string>> = new Map();
@@ -37,10 +41,9 @@ async function generatePromptText(): Promise<string> {
     context: "dailyPrompt",
   });
   const normalized = normalizeSingleLine(raw);
-  if (!normalized) throw new Error("empty ai response");
+  if (!normalized) throw new TransientAIError("empty ai response");
   return normalized;
 }
-
 export async function ensureDailyPromptFreshForUserId(
   userIdRaw: string
 ): Promise<string> {

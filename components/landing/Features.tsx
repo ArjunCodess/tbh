@@ -13,8 +13,15 @@ export default function Features() {
             <h2 className="text-balance text-3xl sm:text-4xl font-semibold">
               Slide into anonymous Q&amp;A, and threads
             </h2>
-            <Button className="mt-8 pr-2 text-black w-full sm:w-auto" variant="outline" asChild>
-              <Link href="/dashboard" className="flex items-center justify-center w-full sm:w-auto">
+            <Button
+              className="mt-8 pr-2 text-black w-full sm:w-auto"
+              variant="outline"
+              asChild
+            >
+              <Link
+                href="/dashboard"
+                className="flex items-center justify-center w-full sm:w-auto"
+              >
                 Try it now
                 <ChevronRight className="size-4 opacity-50" />
               </Link>
@@ -59,8 +66,8 @@ export default function Features() {
             <Image
               src="/dashboard.png"
               alt="TBH Dashboard"
-              width="2880"
-              height="1842"
+              width={2880}
+              height={1842}
               className="aspect-video w-full h-full object-cover"
               priority={false}
             />

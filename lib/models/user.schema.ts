@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface User extends Document {
   username: string;
@@ -24,21 +24,25 @@ const UserSchema: Schema<User> = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: [true, 'Username is required'],
+      required: [true, "Username is required"],
       trim: true,
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       unique: true,
-      match: [/.+@.+\..+/, 'Please use a valid email address'],
+      match: [/.+@.+\..+/, "Please use a valid email address"],
     },
-    password: { type: String, required: [true, 'Password is required'] },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      select: false,
+    },
     isAcceptingMessages: { type: Boolean, default: true },
     displayName: {
       type: String,
       trim: true,
-      maxlength: [50, 'display name must be <= 50 characters'],
+      maxlength: [50, "display name must be <= 50 characters"],
       default: function () {
         return (this as any).username;
       },
@@ -46,26 +50,26 @@ const UserSchema: Schema<User> = new mongoose.Schema(
     profileColor: {
       type: String,
       required: true,
-      default: '#111827',
+      default: "#111827",
       validate: {
         validator: (v: string) => /^#(?:[0-9a-fA-F]{6})$/.test(v),
-        message: 'profile color must be a 6-digit hex like #RRGGBB',
+        message: "profile color must be a 6-digit hex like #RRGGBB",
       },
     },
     textColor: {
       type: String,
       required: true,
-      default: '#FFFFFF',
+      default: "#FFFFFF",
       validate: {
         validator: (v: string) => /^#(?:[0-9a-fA-F]{6})$/.test(v),
-        message: 'text color must be a 6-digit hex like #RRGGBB',
+        message: "text color must be a 6-digit hex like #RRGGBB",
       },
     },
     profileQuote: {
       type: String,
       trim: true,
-      maxlength: [150, 'profile quote must be <= 150 characters'],
-      default: '',
+      maxlength: [150, "profile quote must be <= 150 characters"],
+      default: "",
     },
     replyCount: {
       type: Number,
@@ -78,19 +82,22 @@ const UserSchema: Schema<User> = new mongoose.Schema(
       min: 0,
     },
     dailyPrompt: {
-      text: { type: String, default: '' },
+      text: { type: String, default: "" },
       updatedAt: { type: Date, default: null },
       promptVersion: { type: Number, default: 1 },
     },
   },
-  { timestamps: true, collation: { locale: 'en', strength: 2 } }
+  { timestamps: true, collation: { locale: "en", strength: 2 } }
 );
 
-UserSchema.index({ 'dailyPrompt.updatedAt': -1 });
-UserSchema.index({ username: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
+UserSchema.index({ "dailyPrompt.updatedAt": -1 });
+UserSchema.index(
+  { username: 1 },
+  { unique: true, collation: { locale: "en", strength: 2 } }
+);
 
 const UserModel =
   (mongoose.models.User as mongoose.Model<User>) ||
-  mongoose.model<User>('User', UserSchema);
+  mongoose.model<User>("User", UserSchema);
 
 export default UserModel;

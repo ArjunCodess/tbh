@@ -11,8 +11,17 @@ export function isTransientAIError(error: any): boolean {
   const name = (error as any)?.name || "";
   const message = (error as any)?.message || "";
   if (status && (status === 429 || status >= 500)) return true;
-  if (code && ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENOTFOUND"].includes(code)) return true;
-  if (/RateLimit|Timeout|FetchError|NetworkError/i.test(String(name) + " " + String(message))) return true;
+  if (
+    code &&
+    ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENOTFOUND"].includes(code)
+  )
+    return true;
+  if (
+    /RateLimit|Timeout|FetchError|NetworkError/i.test(
+      String(name) + " " + String(message)
+    )
+  )
+    return true;
   return false;
 }
 
@@ -27,7 +36,10 @@ type GenerateOptions = {
   context?: string;
 };
 
-export async function generateWithRetry(prompt: string, options: GenerateOptions = {}): Promise<string> {
+export async function generateWithRetry(
+  prompt: string,
+  options: GenerateOptions = {}
+): Promise<string> {
   const model = google(AI_MODEL_ID);
   const {
     temperature = 0.7,
@@ -44,20 +56,27 @@ export async function generateWithRetry(prompt: string, options: GenerateOptions
     } catch (error: any) {
       lastError = error;
       if (!isTransientAIError(error)) throw error;
+      const promptPreview = normalizeSingleLine(prompt).slice(0, 80);
       console.warn(`[ai:${context}] transient AI failure`, {
         model: AI_MODEL_ID,
         attempt,
-        prompt,
+        promptPreview,
+        promptLength: prompt.length,
         error: String(error?.message || error),
       });
-      if (attempt < maxAttempts) await sleep(baseDelayMs * Math.pow(2, attempt - 1));
+      if (attempt < maxAttempts)
+        await sleep(baseDelayMs * Math.pow(2, attempt - 1));
     }
   }
-  throw new TransientAIError(String(lastError?.message || "AI generation failed after retries"));
+  throw new TransientAIError(
+    String(lastError?.message || "AI generation failed after retries")
+  );
 }
 
 export function normalizeSingleLine(text: string): string {
-  const cleaned = String(text || "").trim().replace(/\s+/g, " ");
+  const cleaned = String(text || "")
+    .trim()
+    .replace(/\s+/g, " ");
   const normalized = cleaned.replace(/[.!?]+$/g, "");
   return normalized.slice(0, 120);
 }
