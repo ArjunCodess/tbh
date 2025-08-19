@@ -12,12 +12,10 @@ export default function CallToAction() {
             </h2>
             <Link
               href="/dashboard"
-              className="text-primary px-6 py-3 md:px-10 md:py-5 rounded-full font-extrabold text-lg sm:text-2xl shadow-lg transition-transform duration-150 hover:scale-110 bg-white"
+              className="flex flex-row items-center text-primary px-6 py-3 md:px-10 md:py-5 rounded-full font-extrabold text-lg sm:text-2xl shadow-lg transition-transform duration-150 hover:scale-110 bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             >
-              <button className="flex flex-row items-center cursor-pointer">
-                Start Asking
-                <ArrowRight className="ml-2 sm:ml-4" />
-              </button>
+              <span>Start Asking</span>
+              <ArrowRight className="ml-2 sm:ml-4" aria-hidden="true" />
             </Link>
           </div>
         </div>

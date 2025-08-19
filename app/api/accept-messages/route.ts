@@ -50,8 +50,16 @@ export async function POST(request: Request) {
       { status: 401 }
     );
 
-  const { acceptMessages } = await request.json();
-  const userId = user._id;
+  let acceptMessages;
+  try {
+    const body = await request.json();
+    acceptMessages = body.acceptMessages;
+  } catch {
+    return Response.json(
+      { success: false, message: "Invalid request body" },
+      { status: 400 }
+    );
+  }
 
   if (typeof acceptMessages !== "boolean") {
     return Response.json(
@@ -59,11 +67,13 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  const userId = user._id;
+
   try {
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       { isAcceptingMessages: acceptMessages },
-      { new: true }
+      { new: true, projection: { isAcceptingMessages: 1 } }
     );
 
     if (!updatedUser)
@@ -79,7 +89,7 @@ export async function POST(request: Request) {
       {
         success: true,
         message: "Message acceptance status updated successfully",
-        updatedUser,
+        isAcceptingMessages: updatedUser.isAcceptingMessages
       },
       { status: 200 }
     );
