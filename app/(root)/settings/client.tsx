@@ -117,19 +117,24 @@ export default function SettingsClient() {
       ...(textColor ? { textColor } : {}),
       profileQuote: profileQuote.trim(),
     };
-    const res = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const j = await res.json();
-    if (!res.ok || !j?.success) {
-      toast.error(j?.message || "Failed to save");
-      return;
-    }
-    toast.success("Profile saved");
-    if (payload.username && payload.username !== originalUsername) {
-      setOriginalUsername(payload.username);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const j = await res.json();
+      if (!res.ok || !j?.success) {
+        toast.error(j?.message || "Failed to save");
+        return;
+      }
+      toast.success("Profile saved");
+      if (payload.username && payload.username !== originalUsername) {
+        setOriginalUsername(payload.username);
+      }
+    } catch (error) {
+      console.error("Save failed:", error);
+      toast.error("Network error: Failed to save profile");
     }
   }, [displayName, username, profileColor, textColor, profileQuote, originalUsername]);
 

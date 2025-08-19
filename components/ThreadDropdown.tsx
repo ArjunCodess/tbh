@@ -63,9 +63,7 @@ export default function ThreadDropdown({
 
   return (
     <SelectGroup className={className}>
-      <label htmlFor="anonymous-message" className="text-sm font-medium">
-        {"Choose a thread"}
-      </label>
+      <label className="text-sm font-medium">Choose a thread</label>
       <Select value={currentSlug} onValueChange={handleChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select thread" />

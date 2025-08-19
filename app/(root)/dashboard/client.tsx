@@ -484,7 +484,9 @@ export default function DashboardClient({
           <CardContent>
             <div className="flex flex-col md:flex-row text-center items-center justify-between gap-3">
               <Badge className="uppercase text-sm">Daily Prompt</Badge>
-              <p className="text-base leading-relaxed text-balance">{dailyPrompt}</p>
+              <p className="text-base leading-relaxed text-balance">
+                {dailyPrompt}
+              </p>
               <Button
                 variant="outline"
                 size="sm"
@@ -610,7 +612,7 @@ export default function DashboardClient({
                               </AlertDialogTitle>
                               <AlertDialogDescription>
                                 This will permanently delete the thread and its
-                                grouping messages.
+                                grouped messages.{" "}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

@@ -60,6 +60,7 @@ export default function Footer() {
             <Link
               href="https://arjuncodess.is-a.dev/"
               target="_blank"
+              rel="noopener noreferrer"
               className="text-neutral-50 font-semibold underline underline-offset-2"
             >
               @ArjunCodess
