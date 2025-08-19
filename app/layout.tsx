@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthProvider from "@/providers/AuthProvider";
+import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 
 const BricolageGrotesque = Bricolage_Grotesque({ subsets: ["latin"] });
 
@@ -28,8 +30,16 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           {children}
-          <Toaster />
           <Footer />
+          
+          <Toaster />
+
+          <Analytics />
+          <Script
+            defer
+            data-domain="mytbh.vercel.app"
+            src="https://getanalyzr.vercel.app/tracking-script.js"
+          />
         </AuthProvider>
       </body>
     </html>
