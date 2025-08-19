@@ -54,7 +54,7 @@ export async function GET(request: Request) {
               alt="tbh"
               width={250}
               height={150}
-              src="https://tbh-tobehonest.vercel.app/tbh.png"
+              src="https://mytbh.vercel.app/tbh.png"
               style={{ position: "absolute", bottom: "15rem" }}
             />
             <p tw="text-xl absolute bottom-98 text-white">
