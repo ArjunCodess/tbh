@@ -88,7 +88,7 @@ const Floating = ({
     <FloatingContext.Provider value={{ registerElement, unregisterElement }}>
       <div
         ref={containerRef}
-        className={cn("absolute top-0 left-0 w-full h-screen", className)}
+        className={cn("absolute top-[8%] md:top-[6%] left-0 w-full h-screen", className)}
         {...props}
       >
         {children}

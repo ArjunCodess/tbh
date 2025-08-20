@@ -12,7 +12,7 @@ export default function Hero() {
         <Floating sensitivity={-0.5} className="overflow-hidden">
           <FloatingElement
             depth={1.5}
-            className="top-[24%] left-[15%] md:top-[23%] md:left-[25%]"
+            className="top-[16%] left-[15%] md:top-[17%] md:left-[25%]"
           >
             <motion.img
               initial={{ opacity: 0 }}
@@ -24,7 +24,7 @@ export default function Hero() {
           </FloatingElement>
         </Floating>
         <Floating sensitivity={1} className="overflow-hidden">
-          <FloatingElement depth={1} className="top-[24%] left-[65%]">
+          <FloatingElement depth={1} className="top-[16%] left-[65%]">
             <motion.img
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -37,7 +37,7 @@ export default function Hero() {
         <Floating sensitivity={-1} className="overflow-hidden">
           <FloatingElement
             depth={1}
-            className="top-[57%] md:top-[52%] left-[30%]"
+            className="top-[45%] md:top-[46%] left-[30%]"
           >
             <motion.img
               initial={{ opacity: 0 }}
