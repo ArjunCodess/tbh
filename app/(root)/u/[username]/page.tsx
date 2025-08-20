@@ -1,0 +1,132 @@
+import MessageForm from "@/components/MessageForm";
+import ThreadDropdown from "@/components/ThreadDropdown";
+import ReplyMilestones from "@/components/ReplyMilestones";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import connectToDatabase from "@/lib/connectToDatabase";
+import { findUserByUsernameCI } from "@/lib/userIdentity";
+import ThreadModel from "@/lib/models/thread.schema";
+import { notFound } from "next/navigation";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  return {
+    title: `Send an anonymous message to @${username}`,
+    description: `Write and send an anonymous message to @${username}. Your message will be delivered privately.`,
+  };
+}
+
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ username: string }>;
+  searchParams?: Promise<{ q?: string }>;
+}) {
+  const { username } = await params;
+  const { q } = (searchParams ? await searchParams : {}) as { q?: string };
+  await connectToDatabase();
+  const user = await findUserByUsernameCI(username);
+  if (!user?._id) {
+    return notFound();
+  }
+  let threads: { title: string; slug: string }[] = [];
+  if (user?._id) {
+    const items = await ThreadModel.find(
+      { userId: user._id },
+      { title: 1, slug: 1 },
+      { lean: true }
+    )
+      .sort({ createdAt: -1 })
+      .exec();
+
+    const plain = (items || []).map((t: any) => ({
+      title: String(t?.title ?? ""),
+      slug: String(t?.slug ?? ""),
+    }));
+    const ama = plain.find((t) => t.slug === "ama");
+    const rest = plain.filter((t) => t.slug !== "ama");
+    threads = ama ? [ama, ...rest] : rest;
+  }
+  const selectedThreadSlug =
+    (q && threads.some((t) => t.slug === q) ? q : undefined) ??
+    threads.find((t) => t.slug === "ama")?.slug ??
+    threads[0]?.slug ??
+    "ama";
+
+  const headerBg = (user as any)?.profileColor;
+  const textColor = (user as any)?.textColor;
+  const display = String((user as any)?.displayName || username);
+
+  return (
+    <main
+      className="min-h-[calc(100vh-60px)] w-full px-0 pb-14"
+      style={{ background: headerBg }}
+    >
+      <div className="w-full">
+        <div className="mx-auto max-w-2xl px-4 py-10 md:py-14 text-center">
+          {user &&
+            user?.totalMessagesReceived &&
+            user.totalMessagesReceived > 0 && (
+              <div className="text-sm opacity-80" style={{ color: textColor }}>
+                <ReplyMilestones user={user} showPercentage={true} />
+              </div>
+            )}
+          <div className="flex items-center justify-center mt-1">
+            <h1
+              className="text-2xl md:text-3xl font-semibold flex flex-row gap-2"
+              style={{ color: textColor }}
+            >
+              {user && <ReplyMilestones user={user} />}
+              {display}
+              {user && <ReplyMilestones user={user} />}
+            </h1>
+          </div>
+          <p
+            className="text-sm md:text-base opacity-80"
+            style={{ color: textColor }}
+          >
+            @{username}
+          </p>
+          {user && (user as any)?.profileQuote && (
+            <p
+              className="text-sm md:text-base mt-2 italic"
+              style={{ color: textColor }}
+            >
+              ❝{(user as any).profileQuote}❞
+            </p>
+          )}
+        </div>
+        <div className="mx-auto w-full max-w-2xl px-4">
+          <section className="-mt-6 rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-6 md:p-8">
+              <h2 className="text-lg font-semibold tracking-tight md:text-xl">
+                Send an anonymous message
+              </h2>
+              <div className="mt-6 flex flex-col gap-4">
+                <Suspense
+                  fallback={
+                    <div
+                      className="mb-4 h-9 w-full rounded-md bg-muted animate-pulse"
+                      aria-hidden="true"
+                    />
+                  }
+                >
+                  <ThreadDropdown threads={threads} />
+                </Suspense>
+                <MessageForm
+                  username={username}
+                  threadSlug={selectedThreadSlug}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}

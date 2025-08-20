@@ -1,182 +1,79 @@
-'use client'
+import DashboardClient from "./client";
+import type { Metadata } from "next";
+import connectToDatabase from "@/lib/connectToDatabase";
+import { getServerSession } from "next-auth";
+import authOptions from "@/app/api/auth/[...nextauth]/options";
+import ThreadModel from "@/lib/models/thread.schema";
+import mongoose from "mongoose";
 
-import { Message } from '@/app/lib/models/message.schema';
-import { acceptMessageSchema } from '@/app/lib/schema/acceptMessageSchema';
-import MessageCard from '@/components/MessageCard';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
-import { apiResponse } from '@/types/apiResponse';
-import { zodResolver } from '@hookform/resolvers/zod';
-import axios, { AxiosError } from 'axios';
-import { Loader2, RefreshCcw, ImagePlus } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { ensureDailyPromptFreshForUserId } from "@/lib/services/dailyPrompt";
+import MessageModel from "@/lib/models/message.schema";
 
-export default function DashboardPage() {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isSwitchLoading, setIsSwitchLoading] = useState(false);
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
-    const router = useRouter();
-
-    const { toast } = useToast();
-
-    const handleDeleteMessage = (messageId: string) => setMessages(messages.filter((message) => message._id !== messageId));
-
-    const { data: session } = useSession();
-
-    const form = useForm({
-        resolver: zodResolver(acceptMessageSchema),
-    });
-
-    const { register, watch, setValue } = form;
-
-    const acceptMessages = watch('acceptMessages');
-
-    const fetchAcceptMessages = useCallback(async () => {
-        setIsSwitchLoading(true);
-
-        try {
-            const response = await axios.get<apiResponse>('/api/accept-messages');
-            setValue('acceptMessages', response.data.isAcceptingMessages);
-        }
-
-        catch (error: any) {
-            const axiosError = error as AxiosError<apiResponse>;
-
-            toast({
-                title: 'Error',
-                description: axiosError.response?.data.message ?? 'Failed to fetch message settings',
-                variant: 'destructive',
-            });
-        }
-
-        finally {
-            setIsSwitchLoading(false);
-        }
-    }, [setValue, toast]);
-
-    const fetchMessages = useCallback(async (refresh: boolean = false) => {
-        setIsLoading(true);
-        setIsSwitchLoading(false);
-
-        try {
-            const response = await axios.get<apiResponse>('/api/get-messages');
-            setMessages(response.data.messages || []);
-
-            if (refresh) toast({
-                title: 'Refreshed Messages',
-                description: 'Showing latest messages',
-            });
-        }
-
-        catch (error) {
-            const axiosError = error as AxiosError<apiResponse>;
-            toast({
-                title: axiosError.response?.data.message ?? 'Failed to fetch messages',
-                variant: 'destructive',
-            });
-        }
-
-        finally {
-            setIsLoading(false);
-            setIsSwitchLoading(false);
-        }
-    }, [setIsLoading, setMessages, toast]);
-
-    useEffect(() => {
-        if (!session || !session.user) return;
-
-        fetchMessages();
-        fetchAcceptMessages();
-    }, [session, setValue, toast, fetchAcceptMessages, fetchMessages]);
-
-    const handleSwitchChange = async () => {
-        try {
-            const response = await axios.post<apiResponse>('/api/accept-messages', { acceptMessages: !acceptMessages });
-            setValue('acceptMessages', !acceptMessages);
-
-            toast({
-                title: response.data.message,
-                variant: 'default',
-            });
-        }
-
-        catch (error: any) {
-            const axiosError = error as AxiosError<apiResponse>;
-
-            toast({
-                title: 'Error',
-                description: axiosError.response?.data.message ?? 'Failed to update message settings',
-                variant: 'destructive',
-            });
-        }
-    };
-
-    const username = session?.user?.username;
-
-    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
-    const profileUrl = `${origin}/profile/${username}`;
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(profileUrl);
-
-        toast({
-            title: 'URL Copied!',
-            description: 'Profile URL has been copied to clipboard.',
-        });
-    };
-
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  const user = (session as any)?.user as any;
+  if (!session || !user) {
     return (
-        <section className="container px-4 my-14 md:my-20 min-h-screen">
-            <h1 className="text-4xl font-bold mb-4">User Dashboard</h1>
-
-            <div className="mb-4">
-                <h2 className="text-base font-semibold mb-2 md:text-lg">Share your unique link with friends and start receiving messages instantly.</h2>
-                <div className="flex items-center flex-col md:flex-row">
-                    <input
-                        type="text"
-                        value={profileUrl}
-                        disabled
-                        className="w-full p-2 mr-2 rounded-md"
-                    />
-                    <Button onClick={copyToClipboard} className='w-full my-4 md:w-auto'>Copy</Button>
-                </div>
-            </div>
-
-            <Separator />
-
-            <div className='flex md:flex-row flex-col my-8 gap-y-6'>
-                <div className='mx-auto flex justify-center items-center'>
-                    <Switch
-                        {...register('acceptMessages')}
-                        checked={acceptMessages}
-                        onCheckedChange={handleSwitchChange}
-                        disabled={isSwitchLoading}
-                    />
-                    <span className="ml-2">
-                        Accept Messages: {acceptMessages ? 'On' : 'Off'}
-                    </span>
-                </div>
-                <Button variant="outline" disabled={isLoading} className='flex flex-row gap-x-4 ml-4 md:w-1/3' onClick={() => router.push('/dashboard/share-qna')}>
-                    Share QNA Image Prompt{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                </Button>
-                <Button className="flex flex-row gap-x-4 ml-4 md:w-1/3" variant="outline" onClick={(e) => { e.preventDefault(); fetchMessages(true); }} disabled={isLoading}>
-                    Reload Message Feed{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
-                </Button>
-            </div>
-
-            <Separator />
-
-            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {messages.length > 0 ? messages.map((message, index) => (
-                    <MessageCard key={index} message={message} onMessageDelete={handleDeleteMessage} />
-                )) : <p className='mt-2'>No messages to display.</p>}
-            </div>
-        </section>
+      <div className="text-center h-screen flex items-center justify-center">
+        You must sign in to view the dashboard.
+      </div>
     );
+  }
+
+  let dailyPromptText: string | null = null;
+  let userId: mongoose.Types.ObjectId | null = null;
+  try {
+    await connectToDatabase();
+    userId = new mongoose.Types.ObjectId(user._id);
+    dailyPromptText = await ensureDailyPromptFreshForUserId(String(user._id));
+  } catch (error) {
+    console.error("[DashboardPage] Failed to connect or query database:", error);
+    return (
+      <div className="text-center h-screen flex items-center justify-center">
+        We are experiencing issues connecting to the database. Please try again later.
+      </div>
+    );
+  }
+
+  const threadDocs = await ThreadModel.find({ userId }, { title: 1, slug: 1 }, { lean: true }).sort({ createdAt: -1 }).exec();
+  const plainThreads = (threadDocs || []).map((t: any) => ({ _id: String(t._id), title: String(t.title), slug: String(t.slug) }));
+  const ama = plainThreads.find((t) => t.slug === "ama");
+  const rest = plainThreads.filter((t) => t.slug !== "ama");
+  const ordered = ama ? [ama, ...rest] : rest;
+
+  const messagesByThreadEntries = await Promise.all(
+    ordered.map(async (t) => {
+      try {
+        const messages = await MessageModel.find({ userId, isReplied: false })
+          .populate({ path: 'threadId', match: { slug: t.slug }, select: '_id slug' })
+          .sort({ createdAt: -1 })
+          .lean();
+        const filtered = messages.filter((m: any) => m.threadId && (m as any).threadId.slug === t.slug);
+        const plain = filtered.map((m: any) => ({
+          _id: String(m._id),
+          content: String(m.content),
+          createdAt: new Date(m.createdAt),
+          threadId: String((m.threadId as any)._id),
+          isReplied: !!m.isReplied,
+        }));
+        return [t.slug, plain] as const;
+      } catch (error) {
+        console.error(`Failed to fetch messages for thread ${t.slug}:`, error);
+        return [t.slug, []] as const;
+      }
+    })
+  );
+  const messagesByThread = Object.fromEntries(messagesByThreadEntries);
+  return (
+    <DashboardClient
+      username={String(user.username)}
+      dailyPrompt={dailyPromptText || ""}
+      initialThreads={ordered}
+      initialMessagesByThread={messagesByThread}
+    />
+  );
 }

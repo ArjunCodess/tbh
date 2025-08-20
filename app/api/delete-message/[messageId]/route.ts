@@ -1,34 +1,29 @@
-import UserModel from '@/app/lib/models/user.schema';
-import mongoose from 'mongoose';
-import { User } from 'next-auth';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/options';
-import connectToDatabase from '@/app/lib/connectToDatabase';
+import MessageModel from '@/lib/models/message.schema';
+import connectToDatabase from '@/lib/connectToDatabase';
+import { getServerSession } from 'next-auth';
+import authOptions from '@/app/api/auth/[...nextauth]/options';
+import { isValidObjectId } from 'mongoose';
 
-export async function DELETE(request: Request, { params }: { params: { messageId: string } }) {
-     const messageId = params.messageId;
+export async function DELETE(request: Request, { params }: { params: Promise<{ messageId: string }> }) {
+     const { messageId } = await params;
 
-     await connectToDatabase();
+     if (!messageId || typeof messageId !== 'string' || !isValidObjectId(messageId)) {
+          return Response.json({ success: false, message: 'Invalid or missing messageId' }, { status: 400 });
+     }
 
      const session = await getServerSession(authOptions);
-
-     const _user: User = session?.user as User;
+     const _user = (session as any)?.user as any;
 
      if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
 
-     const userId = new mongoose.Types.ObjectId(_user._id);
+     await connectToDatabase();
 
      try {
-          // Update the user document by removing a message with the specified messageId
-          const updateResult = await UserModel.updateOne(
-               { _id: _user._id }, // Filter: Find the user document by user ID
-               { $pull: { messages: { _id: messageId } } } // Update: Pull (remove) the message with the specified messageId from the messages array
-          );
-
-          if (updateResult.modifiedCount === 0) return Response.json({ message: 'Message not found', success: false }, { status: 404 });
-
-          return Response.json({ message: 'Message deleted', success: true }, { status: 200 });
-     }
+          const result = await MessageModel.deleteOne({ _id: messageId, userId: _user._id });
+          if (result.deletedCount === 0) {
+               return Response.json({ message: 'Message not found', success: false }, { status: 404 });
+          }
+          return Response.json({ message: 'Message deleted', success: true }, { status: 200 });     }
 
      catch (error: any) {
           console.error('An unexpected error occurred: ', error);

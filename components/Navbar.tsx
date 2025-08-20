@@ -1,102 +1,98 @@
-'use client'
+"use client";
 
-import Link from "next/link"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User } from 'next-auth';
-import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { ArrowRight } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { useSession, signOut } from "next-auth/react";
+import { LayoutDashboard, LogOut, Settings, ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 export default function Navbar() {
-    const { data: session } = useSession();
-    const user: User = session?.user as User;
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
-    const router = useRouter();
+  return (
+    <header className="w-full border-b border-neutral-800 bg-neutral-950">
+      <div className="container mx-auto px-3 sm:px-4 flex h-14 sm:h-16 items-center justify-between">
+        <Link
+          href="/"
+          className="text-xl md:text-2xl font-bold flex items-center gap-2"
+        >
+          <span className="sr-only">TBH</span>
+          <Image src="/tbh.png" alt="TBH" width={58} height={32} priority />
+        </Link>
 
-    const toDashboard = () => router.replace('/dashboard')
-
-    return (
-        <header>
-            <nav className="flex h-16 items-center justify-between bg-neutral-950 px-4 md:px-6">
-                <Link href="/" className="text-xl md:text-2xl font-bold text-white" prefetch={false}>
-                    TBH
+        {status === "loading" ? (
+          <div className="h-8 w-8 rounded-full bg-neutral-200 animate-pulse"></div>
+        ) : user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-8 w-8 rounded-full p-0 z-10"
+              >
+                <Avatar className="h-8 w-8 rounded-full">
+                  <AvatarImage
+                    src={(user as any)?.image || ""}
+                    alt={user?.name || "User"}
+                  />
+                  <AvatarFallback className="bg-neutral-100 text-neutral-800">
+                    {user?.username?.charAt(0)?.toUpperCase() ||
+                      user?.email?.charAt(0)?.toUpperCase() ||
+                      "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-medium">
+                Logged in as{" "}
+                <span className="font-bold">
+                  @{user?.username ?? user?.email}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
                 </Link>
-
-                {(session && user.username && user.email)
-                    ? <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="rounded-full">
-                                <Avatar className="h-8 w-8 md:h-10 md:w-10">
-                                    <AvatarFallback>{user.username.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel className="font-medium">
-                                Logged in as <span className="font-bold">@{user.username}</span>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <Button className="w-full" onClick={() => toDashboard()} variant="ghost">
-                                <UserIcon className="mr-2 h-4 w-4" />
-                                Dashboard
-                            </Button>
-                            <DropdownMenuSeparator />
-                            <Button className="w-full" onClick={() => signOut()}>
-                                <LogOutIcon className="mr-2 h-4 w-4" />
-                                Logout
-                            </Button>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    : <Link href={"/sign-up"} className="text-sm md:text-base bg-gradient-to-tr from-yellow-500 via-orange-500 to-violet-500 rounded-full">
-                        <button className="h-10 px-4 py-2 text-white">
-                            Create an account <ArrowRight className="w-5 h-5 inline" />
-                        </button>
-                    </Link>
-                }
-            </nav>
-        </header>
-    )
-}
-
-function LogOutIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" x2="9" y1="12" y2="12" />
-        </svg>
-    )
-}
-
-function UserIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-        </svg>
-    )
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => signOut({ callbackUrl: "/sign-in" })}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            asChild
+            variant="default"
+            className="px-2 sm:px-4 text-sm h-8 sm:h-9 rounded-full"
+          >
+            <Link href="/sign-up">
+              Create an account <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </header>
+  );
 }

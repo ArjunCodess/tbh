@@ -1,44 +1,109 @@
-import mongoose from 'mongoose';
-import { User } from 'next-auth';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/options';
-import connectToDatabase from '@/app/lib/connectToDatabase';
-import UserModel from '@/app/lib/models/user.schema';
+import mongoose from "mongoose";
+import connectToDatabase from "@/lib/connectToDatabase";
+import { getServerSession, type Session } from "next-auth";
+import authOptions from "@/app/api/auth/[...nextauth]/options";
+import ThreadModel from "@/lib/models/thread.schema";
+import UserModel from "@/lib/models/user.schema";
+import { NextRequest, NextResponse } from "next/server";
+import MessageModel from "@/lib/models/message.schema";
 
-export async function GET(request: Request) {
-     await connectToDatabase();
+interface SessionUser {
+  _id: string;
+  id?: string;
+  username?: string | null;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
 
-     const session = await getServerSession(authOptions);
+interface AuthSession extends Session {
+  user?: SessionUser | null;
+}
 
-     const _user: User = session?.user as User;
+export async function GET(req: NextRequest) {
+  await connectToDatabase();
 
-     if (!session || !_user) return Response.json({ success: false, message: 'Not authenticated' }, { status: 401 });
+  const session = (await getServerSession(authOptions)) as AuthSession | null;
+  const _user = session?.user;
 
-     const userId = new mongoose.Types.ObjectId(_user._id);
+  if (!session || !_user)
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    );
 
-     try {
-          const messages = await UserModel.aggregate([
-               // Stage 1: Match documents where _id is equal to the given userId
-               { $match: { _id: userId } },
+  const rawUserId = _user?._id ?? _user?.id;
+  if (!rawUserId || !mongoose.isValidObjectId(rawUserId)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid user id" },
+      { status: 400 }
+    );
+  }
 
-               // Stage 2: Deconstruct the 'messages' array field from the input documents to output a document for each element.
-               { $unwind: '$messages' },
+  const userId = new mongoose.Types.ObjectId(rawUserId);
+  const { searchParams } = new URL(req.url);
+  const threadSlug = searchParams.get("threadSlug");
+  const threadIdParam = searchParams.get("threadId");
+  const filterParam = (searchParams.get("filter") || "unreplied").toLowerCase();
+  const filter: "unreplied" | "replied" | "all" =
+    filterParam === "replied"
+      ? "replied"
+      : filterParam === "all"
+      ? "all"
+      : "unreplied";
 
-               // Stage 3: Sort the resulting documents by 'messages.createdAt' in descending order.
-               { $sort: { 'messages.createdAt': -1 } },
+  let targetThreadId: mongoose.Types.ObjectId | null = null;
 
-               // Stage 4: Group the documents back into a single document per user, with an array of all 'messages', now sorted by 'createdAt'.
-               { $group: { _id: '$_id', messages: { $push: '$messages' } } },
-          ])
-               .exec(); // Execute the aggregation pipeline and return the result
+  if (threadIdParam && mongoose.isValidObjectId(threadIdParam)) {
+    targetThreadId = new mongoose.Types.ObjectId(threadIdParam);
+  } else {
+    const slug = threadSlug || "ama";
+    const thread = await ThreadModel.findOne(
+      { userId, slug },
+      { _id: 1 }
+    ).lean();
+    if (thread) targetThreadId = new mongoose.Types.ObjectId(thread._id as any);
+  }
 
-          if (!messages || messages.length === 0) return Response.json({ message: 'No message found', success: false }, { status: 404 });
+  try {
+    const criteria: any = { userId };
+    if (targetThreadId) criteria.threadId = targetThreadId;
+    if (filter !== "all") criteria.isReplied = filter === "replied";
 
-          return Response.json({ messages: messages[0].messages }, { status: 200 });
-     }
+    const messages = await MessageModel.find(criteria)
+      .sort({ createdAt: -1 })
+      .lean();
 
-     catch (error: any) {
-          console.error('An unexpected error occurred: ', error);
-          return Response.json({ message: 'Internal server error', success: false }, { status: 500 });
-     }
+    if (messages.length > 0) {
+      return NextResponse.json(
+        { messages, success: true, message: "OK" },
+        { status: 200 }
+      );
+    }
+
+    // Fallback: legacy embedded messages (pre-migration)
+    // note: filtering by replied is not applied to legacy data by design
+    const pipeline: any[] = [
+      { $match: { _id: userId } },
+      { $unwind: "$messages" },
+    ];
+    if (targetThreadId)
+      pipeline.push({ $match: { "messages.threadId": targetThreadId } });
+    pipeline.push(
+      { $sort: { "messages.createdAt": -1 } },
+      { $group: { _id: "$_id", messages: { $push: "$messages" } } }
+    );
+    const legacy = await UserModel.aggregate(pipeline).exec();
+    const legacyMessages = legacy?.[0]?.messages || [];
+    return NextResponse.json(
+      { messages: legacyMessages, success: true, message: "OK" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("An unexpected error occurred: ", error);
+    return NextResponse.json(
+      { message: "Internal server error", success: false },
+      { status: 500 }
+    );
+  }
 }
