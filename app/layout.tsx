@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import AuthProvider from "@/providers/AuthProvider";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 const BricolageGrotesque = Bricolage_Grotesque({ subsets: ["latin"] });
 
@@ -25,21 +26,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={BricolageGrotesque.className}>
         <AuthProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            {children}
+            <Footer />
 
-          <Toaster />
+            <Toaster />
 
-          <Analytics />
-          <Script
-            defer
-            data-domain="mytbh.vercel.app"
-            src="https://getanalyzr.vercel.app/tracking-script.js"
-          />
+            <Analytics />
+            <Script
+              defer
+              data-domain="mytbh.vercel.app"
+              src="https://getanalyzr.vercel.app/tracking-script.js"
+            />
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

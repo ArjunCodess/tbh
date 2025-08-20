@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import ColorField from "@/components/ColorField";
 import ReplyMilestones from "@/components/ReplyMilestones";
+import { ModeToggle } from "@/components/ThemeToggler";
 
 export default function SettingsClient() {
   const [displayName, setDisplayName] = useState("");
@@ -204,13 +205,16 @@ export default function SettingsClient() {
       <div className="mx-auto w-full max-w-3xl">
         <section className="rounded-2xl border bg-card text-card-foreground shadow-sm">
           <div className="space-y-8 p-6 md:p-10">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                Profile Settings
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Customize your public profile.
-              </p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                  Profile Settings
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Customize your public profile.
+                </p>
+              </div>
+              <ModeToggle />
             </div>
             <div className="grid gap-8">
               <div className="grid gap-3">
