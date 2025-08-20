@@ -24,9 +24,11 @@ const authOptions: NextAuthOptions = {
             { email: credentials.identifier },
             { username: credentials.identifier },
           ],
-        });
+        }).select("+password");
 
         if (!user) return null;
+
+        if (!user.password) return null;
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
