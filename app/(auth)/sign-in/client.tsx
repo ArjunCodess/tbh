@@ -47,13 +47,13 @@ export default function SignInClient() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[calc(100vh-60px)] sm:bg-neutral-900">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg sm:shadow-md">
+    <div className="flex justify-center items-center min-h-[calc(100vh-60px)]">
+      <div className="w-full max-w-md p-8 space-y-8 bg-card text-card-foreground rounded-lg shadow-md border">
         <div className="text-center">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-4">
             Welcome!
           </h1>
-          <p className="mb-4 text-sm md:text-base">
+          <p className="mb-4 text-sm md:text-base text-muted-foreground">
             Please sign in to pick up right where you left off.
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function SignInClient() {
         <div className="text-center mt-4">
           <p>
             Not a member yet?{" "}
-            <Link href="/sign-up" className="text-blue-600 hover:text-blue-800">
+            <Link href="/sign-up" className="text-primary hover:text-primary/80 underline-offset-4 hover:underline">
               Sign up
             </Link>
           </p>
