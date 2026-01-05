@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-export const AI_MODEL_ID = "gemini-2.0-flash";
+export const AI_MODEL_ID = "gemini-3-flash-preview";
 
 export class TransientAIError extends Error {}
 

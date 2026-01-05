@@ -12,12 +12,12 @@
   - store prompt on `User` document as `dailyPrompt` subdocument.
   - fields: `text: string`, `updatedAt: Date`, `model: string`, `promptVersion: number`.
 - integrations
-  - ai sdk `generateText` with `@ai-sdk/google` model `gemini-2.0-flash` (consistent with `app/api/suggest-messages`).
+  - ai sdk `generateText` with `@ai-sdk/google` model `gemini-3-flash-preview` (consistent with `app/api/suggest-messages`).
 
 ### prompt generation logic
 
 - provider and call
-  - `const model = google("gemini-2.0-flash");`
+  - `const model = google("gemini-3-flash-preview");`
   - `const { text } = await generateText({ model, prompt, temperature: 0.7, maxTokens: 40 });`
 - template
   - intent: one short, playful Gen‑Z style question about crushes, love, or light feelings suitable for a public profile.
